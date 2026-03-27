@@ -145,6 +145,34 @@
     </div>
   </div>
 
+  <!-- VARIATION ADD / EDIT MODAL -->
+  <div class="modal-overlay" id="varModalOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="varModalTitle">Add Variation</h3>
+        <button class="modal-close" id="varModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>Variation Name <span class="required">*</span></label>
+        <input type="text" id="varName" placeholder="e.g. Pretzel Walk, Body Wave Exit…" />
+
+        <label>Proficiency</label>
+        <div class="level-picker" id="varLevelPicker">
+          <button class="level-opt" data-level="0">Not Started</button>
+          <button class="level-opt" data-level="1">Learning</button>
+          <button class="level-opt" data-level="2">Developing</button>
+          <button class="level-opt" data-level="3">Comfortable</button>
+          <button class="level-opt" data-level="4">Solid</button>
+          <button class="level-opt" data-level="5">Mastered</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="varModalCancel">Cancel</button>
+        <button class="btn-primary" id="varModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
