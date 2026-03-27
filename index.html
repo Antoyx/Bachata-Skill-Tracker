@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sensual Bachata Skill Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="logo">&#127926;</span>
+        <div>
+          <h1>Bachata Skill Tracker</h1>
+          <p class="subtitle">Sensual Style</p>
+        </div>
+      </div>
+      <div class="progress-summary" id="progressSummary"></div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-section="moves">Moves</button>
+      <button class="nav-btn" data-section="combos">Combos</button>
+      <button class="nav-btn" data-section="styling">Styling</button>
+      <button class="nav-btn" data-section="footwork">Footwork</button>
+      <button class="nav-btn" data-section="isolations">Body Isolations</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- MOVES -->
+    <section id="moves" class="skill-section active">
+      <div class="section-header">
+        <div>
+          <h2>Moves</h2>
+          <p class="section-desc">Individual steps, turns, dips, and patterns</p>
+        </div>
+        <button class="add-btn" data-section="moves">+ Add Move</button>
+      </div>
+      <div class="skill-list" id="moves-list"></div>
+    </section>
+
+    <!-- COMBOS -->
+    <section id="combos" class="skill-section">
+      <div class="section-header">
+        <div>
+          <h2>Combos</h2>
+          <p class="section-desc">Sequences combining multiple moves</p>
+        </div>
+        <button class="add-btn" data-section="combos">+ Add Combo</button>
+      </div>
+      <div class="skill-list" id="combos-list"></div>
+    </section>
+
+    <!-- STYLING -->
+    <section id="styling" class="skill-section">
+      <div class="section-header">
+        <div>
+          <h2>Styling</h2>
+          <p class="section-desc">Arms, hands, head, and overall aesthetic</p>
+        </div>
+        <button class="add-btn" data-section="styling">+ Add Style</button>
+      </div>
+      <div class="skill-list" id="styling-list"></div>
+    </section>
+
+    <!-- FOOTWORK -->
+    <section id="footwork" class="skill-section">
+      <div class="section-header">
+        <div>
+          <h2>Footwork</h2>
+          <p class="section-desc">Intricate foot patterns and shines</p>
+        </div>
+        <button class="add-btn" data-section="footwork">+ Add Footwork</button>
+      </div>
+      <div class="skill-list" id="footwork-list"></div>
+    </section>
+
+    <!-- BODY ISOLATIONS -->
+    <section id="isolations" class="skill-section">
+      <div class="section-header">
+        <div>
+          <h2>Body Isolations</h2>
+          <p class="section-desc">Chest, hip, shoulder, and wave movements</p>
+        </div>
+        <button class="add-btn" data-section="isolations">+ Add Isolation</button>
+      </div>
+      <div class="skill-list" id="isolations-list"></div>
+    </section>
+  </main>
+
+  <!-- ADD / EDIT MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Skill</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" id="skillName" placeholder="e.g. Basic Step, Body Roll…" />
+
+        <label>Notes <span class="optional">(optional)</span></label>
+        <textarea id="skillNotes" placeholder="Tips, video links, cues to remember…" rows="3"></textarea>
+
+        <label>Proficiency</label>
+        <div class="level-picker" id="levelPicker">
+          <button class="level-opt" data-level="0">Not Started</button>
+          <button class="level-opt" data-level="1">Learning</button>
+          <button class="level-opt" data-level="2">Developing</button>
+          <button class="level-opt" data-level="3">Comfortable</button>
+          <button class="level-opt" data-level="4">Solid</button>
+          <button class="level-opt" data-level="5">Mastered</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modalCancel">Cancel</button>
+        <button class="btn-primary" id="modalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRM -->
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Delete Skill?</h3>
+        <button class="modal-close" id="deleteClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteSkillName"></strong>? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="deleteCancelBtn">Cancel</button>
+        <button class="btn-danger" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
