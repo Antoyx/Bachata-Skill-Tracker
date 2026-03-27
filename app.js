@@ -45,9 +45,9 @@ const DEFAULT_DATA = {
     {
       id: uid(), name: 'Pretzel', notes: 'Multi-arm wrap combination', level: 0, difficulty: 2,
       variations: [
-        { id: uid(), name: 'Pretzel Walk',       level: 0 },
-        { id: uid(), name: 'Pretzel Body Wave',  level: 0 },
-        { id: uid(), name: 'Pretzel Exit (Turn)', level: 0 },
+        { id: uid(), name: 'Pretzel Walk',        level: 0, difficulty: 2 },
+        { id: uid(), name: 'Pretzel Body Wave',   level: 0, difficulty: 2 },
+        { id: uid(), name: 'Pretzel Exit (Turn)', level: 0, difficulty: 2 },
       ],
     },
     { id: uid(), name: 'Double Turn',                   notes: '2-rotation turn with controlled spot',         level: 0, difficulty: 2, variations: [] },
@@ -123,10 +123,11 @@ let selectedLevel      = 0;
 let selectedDifficulty = 0;
 
 // Variation modal state
-let varSection   = null;
-let varSkillId   = null;
-let varEditingId = null;
-let varLevel     = 0;
+let varSection    = null;
+let varSkillId    = null;
+let varEditingId  = null;
+let varLevel      = 0;
+let varDifficulty = 0;
 
 // Delete state
 let deleteSection = null;
@@ -314,6 +315,11 @@ function makeVariationRow(variation, skillId, section) {
   nameEl.className = 'var-name';
   nameEl.textContent = variation.name;
 
+  const vdiff = variation.difficulty ?? 0;
+  const diffBadge = document.createElement('span');
+  diffBadge.className = `diff-badge diff-${vdiff}`;
+  diffBadge.textContent = DIFFICULTIES[vdiff].short;
+
   const badge = document.createElement('span');
   badge.className = `skill-badge level-${variation.level}`;
   badge.style.fontSize = '0.65rem';
@@ -338,6 +344,7 @@ function makeVariationRow(variation, skillId, section) {
   actions.appendChild(delBtn);
 
   row.appendChild(nameEl);
+  row.appendChild(diffBadge);
   row.appendChild(badge);
   row.appendChild(actions);
   return row;
@@ -500,13 +507,15 @@ skillNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') document.g
 const varModalOverlay = document.getElementById('varModalOverlay');
 const varModalTitle   = document.getElementById('varModalTitle');
 const varNameEl       = document.getElementById('varName');
+const varDiffPicker   = document.getElementById('varDiffPicker');
 const varLevelPicker  = document.getElementById('varLevelPicker');
 
 function openVarModal(section, skillId, variationId) {
-  varSection   = section;
-  varSkillId   = skillId;
-  varEditingId = variationId;
-  varLevel     = 0;
+  varSection    = section;
+  varSkillId    = skillId;
+  varEditingId  = variationId;
+  varLevel      = 0;
+  varDifficulty = 0;
 
   // Ensure card is expanded
   expandedCards[skillId] = true;
@@ -517,12 +526,14 @@ function openVarModal(section, skillId, variationId) {
     varModalTitle.textContent = 'Edit Variation';
     varNameEl.value = v.name;
     varLevel        = v.level;
+    varDifficulty   = v.difficulty ?? 0;
   } else {
     varModalTitle.textContent = 'Add Variation';
     varNameEl.value = '';
   }
 
   updateVarLevelPicker();
+  updateVarDiffPicker();
   varModalOverlay.classList.add('open');
   setTimeout(() => varNameEl.focus(), 50);
 }
@@ -540,11 +551,24 @@ function updateVarLevelPicker() {
   });
 }
 
+function updateVarDiffPicker() {
+  varDiffPicker.querySelectorAll('.diff-opt').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.diff) === varDifficulty);
+  });
+}
+
 varLevelPicker.addEventListener('click', e => {
   const btn = e.target.closest('.level-opt');
   if (!btn) return;
   varLevel = parseInt(btn.dataset.level);
   updateVarLevelPicker();
+});
+
+varDiffPicker.addEventListener('click', e => {
+  const btn = e.target.closest('.diff-opt');
+  if (!btn) return;
+  varDifficulty = parseInt(btn.dataset.diff);
+  updateVarDiffPicker();
 });
 
 document.getElementById('varModalClose').addEventListener('click', closeVarModal);
@@ -563,11 +587,12 @@ document.getElementById('varModalSave').addEventListener('click', () => {
   if (!skill.variations) skill.variations = [];
 
   if (varEditingId) {
-    const v = skill.variations.find(v => v.id === varEditingId);
-    v.name  = name;
-    v.level = varLevel;
+    const v      = skill.variations.find(v => v.id === varEditingId);
+    v.name       = name;
+    v.level      = varLevel;
+    v.difficulty = varDifficulty;
   } else {
-    skill.variations.push({ id: uid(), name, level: varLevel });
+    skill.variations.push({ id: uid(), name, level: varLevel, difficulty: varDifficulty });
   }
 
   saveData();
