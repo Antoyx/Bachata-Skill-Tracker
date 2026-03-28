@@ -1,7 +1,7 @@
 'use strict';
 
 // ===== SUPABASE =====
-const SUPABASE_URL = 'https://yuhdfsulyslcfqdxbewb.supabase.com';
+const SUPABASE_URL = 'https://yuhdfsulyslcfqdxbewb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JM0BHIEuBWB_blpmZcJ2vQ_y8ragOP0';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
