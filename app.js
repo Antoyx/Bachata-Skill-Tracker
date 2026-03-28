@@ -120,6 +120,7 @@ let varSkillId    = null;
 let varEditingId  = null;
 let varLevel      = 0;
 let varDifficulty = 0;
+let varNotes      = '';
 
 // Delete state
 let deleteSection = null;
@@ -235,7 +236,7 @@ async function loadUserData() {
       if (!data[s.section]) return;
       const vars = (s.variations || [])
         .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
-        .map(v => ({ id:v.id, name:v.name, level:v.level, difficulty:v.difficulty ?? 0 }));
+        .map(v => ({ id:v.id, name:v.name, notes:v.notes || '', level:v.level, difficulty:v.difficulty ?? 0 }));
       data[s.section].push({ id:s.id, name:s.name, notes:s.notes, level:s.level, difficulty:s.difficulty ?? 0, variations:vars });
     });
 
@@ -298,22 +299,22 @@ async function dbDeleteSkill(section, id) {
 }
 
 // ===== CRUD – VARIATIONS =====
-async function dbAddVariation(section, skillId, name, level, difficulty) {
+async function dbAddVariation(section, skillId, name, notes, level, difficulty) {
   const { data: v, error } = await sb.from('variations')
-    .insert({ skill_id: skillId, user_id: currentUser.id, name, level, difficulty })
+    .insert({ skill_id: skillId, user_id: currentUser.id, name, notes, level, difficulty })
     .select().single();
   if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   if (!skill.variations) skill.variations = [];
-  skill.variations.push({ id:v.id, name, level, difficulty });
+  skill.variations.push({ id:v.id, name, notes, level, difficulty });
   setCachedData(data); render();
 }
 
-async function dbUpdateVariation(section, skillId, varId, name, level, difficulty) {
-  const { error } = await sb.from('variations').update({ name, level, difficulty }).eq('id', varId);
+async function dbUpdateVariation(section, skillId, varId, name, notes, level, difficulty) {
+  const { error } = await sb.from('variations').update({ name, notes, level, difficulty }).eq('id', varId);
   if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
-  Object.assign(skill.variations.find(v => v.id === varId), { name, level, difficulty });
+  Object.assign(skill.variations.find(v => v.id === varId), { name, notes, level, difficulty });
   setCachedData(data); render();
 }
 
@@ -508,9 +509,21 @@ function makeVariationRow(variation, skillId, section) {
   const row = document.createElement('div');
   row.className = 'variation-row';
 
-  const nameEl = document.createElement('span');
-  nameEl.className = 'var-name';
-  nameEl.textContent = variation.name;
+  const nameEl = document.createElement('div');
+  nameEl.className = 'var-info';
+
+  const varNameSpan = document.createElement('span');
+  varNameSpan.className = 'var-name';
+  varNameSpan.textContent = variation.name;
+  nameEl.appendChild(varNameSpan);
+
+  if (variation.notes) {
+    const varNotesSpan = document.createElement('span');
+    varNotesSpan.className = 'skill-notes';
+    varNotesSpan.style.fontSize = '0.75rem';
+    varNotesSpan.textContent = variation.notes;
+    nameEl.appendChild(varNotesSpan);
+  }
 
   const vdiff = variation.difficulty ?? 0;
   const diffBadge = document.createElement('span');
@@ -688,6 +701,7 @@ skillNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') document.g
 const varModalOverlay = document.getElementById('varModalOverlay');
 const varModalTitle   = document.getElementById('varModalTitle');
 const varNameEl       = document.getElementById('varName');
+const varNotesEl      = document.getElementById('varNotes');
 const varDiffPicker   = document.getElementById('varDiffPicker');
 const varLevelPicker  = document.getElementById('varLevelPicker');
 
@@ -704,12 +718,14 @@ function openVarModal(section, skillId, variationId) {
     const skill = data[section].find(s => s.id === skillId);
     const v     = skill.variations.find(v => v.id === variationId);
     varModalTitle.textContent = 'Edit Variation';
-    varNameEl.value = v.name;
-    varLevel        = v.level;
-    varDifficulty   = v.difficulty ?? 0;
+    varNameEl.value  = v.name;
+    varNotesEl.value = v.notes || '';
+    varLevel         = v.level;
+    varDifficulty    = v.difficulty ?? 0;
   } else {
     varModalTitle.textContent = 'Add Variation';
-    varNameEl.value = '';
+    varNameEl.value  = '';
+    varNotesEl.value = '';
   }
 
   updateVarLevelPicker();
@@ -759,12 +775,13 @@ document.getElementById('varModalSave').addEventListener('click', async () => {
   const sec   = varSection;
   const skId  = varSkillId;
   const vId   = varEditingId;
+  const notes = varNotesEl.value.trim();
   const lvl   = varLevel;
   const diff  = varDifficulty;
   closeVarModal();
   try {
-    if (vId) await dbUpdateVariation(sec, skId, vId, name, lvl, diff);
-    else     await dbAddVariation(sec, skId, name, lvl, diff);
+    if (vId) await dbUpdateVariation(sec, skId, vId, name, notes, lvl, diff);
+    else     await dbAddVariation(sec, skId, name, notes, lvl, diff);
   } catch (err) { alert('Save failed: ' + err.message); }
 });
 

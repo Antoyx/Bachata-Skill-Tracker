@@ -313,11 +313,17 @@ main {
   border: 1px solid var(--border);
 }
 
-.var-name {
+.var-info {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.var-name {
   font-size: 0.85rem;
   font-weight: 500;
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
