@@ -6,7 +6,7 @@ const SUPABASE_KEY = 'sb_publishable_JM0BHIEuBWB_blpmZcJ2vQ_y8ragOP0';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== CONSTANTS =====
-const SECTIONS = ['moves', 'combos', 'styling', 'footwork', 'isolations'];
+const SECTIONS = ['moves', 'combos', 'styling', 'footwork', 'isolations', 'intros'];
 
 const LEVELS = [
   { short: 'Not Started' },
