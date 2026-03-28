@@ -209,6 +209,7 @@ async function loadUserData() {
   if (cached) {
     data = cached;
     render();
+    hideLoading(); // Show cached data immediately, sync in background
   } else {
     showLoading(); // Only show spinner the very first time (no cache yet)
   }
