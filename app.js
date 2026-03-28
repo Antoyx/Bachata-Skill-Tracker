@@ -315,9 +315,12 @@ async function initAuth() {
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
+      const isNewSignIn = !currentUser;
       currentUser = session.user;
-      showApp();
-      await loadUserData();
+      if (isNewSignIn) {
+        showApp();
+        await loadUserData();
+      }
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
       data = { moves:[], combos:[], styling:[], footwork:[], isolations:[] };
