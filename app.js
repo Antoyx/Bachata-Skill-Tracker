@@ -207,11 +207,13 @@ async function loadUserData() {
   // Show cached data instantly — no blocking spinner
   const cached = getCachedData();
   if (cached) {
+    // Ensure all sections exist in case cache is from an older version
+    SECTIONS.forEach(sec => { if (!cached[sec]) cached[sec] = []; });
     data = cached;
-    render();
-    hideLoading(); // Show cached data immediately, sync in background
+    try { render(); } catch (_) {}
+    hideLoading();
   } else {
-    showLoading(); // Only show spinner the very first time (no cache yet)
+    showLoading();
   }
 
   try {
@@ -223,7 +225,7 @@ async function loadUserData() {
 
     if (error) throw error;
 
-    if (skills.length === 0) {
+    if (!skills || skills.length === 0) {
       await seedDefaultData();
       return loadUserData();
     }
@@ -326,14 +328,20 @@ async function dbDeleteVariation(section, skillId, varId) {
 // ===== AUTH INIT =====
 async function initAuth() {
   showLoading();
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    showApp();
-    await loadUserData();
-  } else {
-    hideLoading();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      showApp();
+      await loadUserData();
+    } else {
+      showAuthScreen();
+    }
+  } catch (err) {
+    console.error('Auth init error:', err);
     showAuthScreen();
+  } finally {
+    hideLoading();
   }
 
   sb.auth.onAuthStateChange(async (event, session) => {
