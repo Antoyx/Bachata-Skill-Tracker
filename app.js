@@ -191,7 +191,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 // ===== LOCAL CACHE (prevents spinner on Android tab reload) =====
-function cacheKey() { return `bachata_cache_${currentUser.id}`; }
+function cacheKey() { return `bachata_cache_v2_${currentUser.id}`; }
 function getCachedData() {
   try { return JSON.parse(localStorage.getItem(cacheKey()) || 'null'); } catch { return null; }
 }
