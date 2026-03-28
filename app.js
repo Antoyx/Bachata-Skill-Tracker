@@ -103,7 +103,7 @@ const DEFAULT_SKILLS = [
 
 // ===== APP STATE =====
 let currentUser = null;
-let data = { moves:[], combos:[], styling:[], footwork:[], isolations:[] };
+let data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
 let activeSection = 'moves';
 let activeFilter  = 'all';
 const expandedCards = {};
@@ -228,7 +228,7 @@ async function loadUserData() {
       return loadUserData();
     }
 
-    data = { moves:[], combos:[], styling:[], footwork:[], isolations:[] };
+    data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
     skills.forEach(s => {
       if (!data[s.section]) return;
       const vars = (s.variations || [])
@@ -347,7 +347,7 @@ async function initAuth() {
     } else if (event === 'SIGNED_OUT') {
       clearCachedData();
       currentUser = null;
-      data = { moves:[], combos:[], styling:[], footwork:[], isolations:[] };
+      data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
       showAuthScreen();
     }
   });
