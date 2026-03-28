@@ -190,9 +190,29 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   });
 });
 
+// ===== LOCAL CACHE (prevents spinner on Android tab reload) =====
+function cacheKey() { return `bachata_cache_${currentUser.id}`; }
+function getCachedData() {
+  try { return JSON.parse(localStorage.getItem(cacheKey()) || 'null'); } catch { return null; }
+}
+function setCachedData(d) {
+  try { localStorage.setItem(cacheKey(), JSON.stringify(d)); } catch {}
+}
+function clearCachedData() {
+  if (currentUser) localStorage.removeItem(cacheKey());
+}
+
 // ===== DATA =====
 async function loadUserData() {
-  showLoading();
+  // Show cached data instantly — no blocking spinner
+  const cached = getCachedData();
+  if (cached) {
+    data = cached;
+    render();
+  } else {
+    showLoading(); // Only show spinner the very first time (no cache yet)
+  }
+
   try {
     const { data: skills, error } = await sb
       .from('skills')
@@ -216,9 +236,11 @@ async function loadUserData() {
       data[s.section].push({ id:s.id, name:s.name, notes:s.notes, level:s.level, difficulty:s.difficulty ?? 0, variations:vars });
     });
 
+    setCachedData(data); // Keep cache fresh
     render();
   } catch (err) {
-    alert('Failed to load data: ' + err.message);
+    if (!cached) alert('Failed to load data: ' + err.message);
+    // If cache exists, silently ignore — user sees last known data
   } finally {
     hideLoading();
   }
@@ -255,21 +277,21 @@ async function dbAddSkill(section, name, notes, level, difficulty) {
     .select().single();
   if (error) throw error;
   data[section].push({ id:s.id, name, notes, level, difficulty, variations:[] });
-  render();
+  setCachedData(data); render();
 }
 
 async function dbUpdateSkill(section, id, name, notes, level, difficulty) {
   const { error } = await sb.from('skills').update({ name, notes, level, difficulty }).eq('id', id);
   if (error) throw error;
   Object.assign(data[section].find(s => s.id === id), { name, notes, level, difficulty });
-  render();
+  setCachedData(data); render();
 }
 
 async function dbDeleteSkill(section, id) {
   const { error } = await sb.from('skills').delete().eq('id', id);
   if (error) throw error;
   data[section] = data[section].filter(s => s.id !== id);
-  render();
+  setCachedData(data); render();
 }
 
 // ===== CRUD – VARIATIONS =====
@@ -281,7 +303,7 @@ async function dbAddVariation(section, skillId, name, level, difficulty) {
   const skill = data[section].find(s => s.id === skillId);
   if (!skill.variations) skill.variations = [];
   skill.variations.push({ id:v.id, name, level, difficulty });
-  render();
+  setCachedData(data); render();
 }
 
 async function dbUpdateVariation(section, skillId, varId, name, level, difficulty) {
@@ -289,7 +311,7 @@ async function dbUpdateVariation(section, skillId, varId, name, level, difficult
   if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   Object.assign(skill.variations.find(v => v.id === varId), { name, level, difficulty });
-  render();
+  setCachedData(data); render();
 }
 
 async function dbDeleteVariation(section, skillId, varId) {
@@ -297,7 +319,7 @@ async function dbDeleteVariation(section, skillId, varId) {
   if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   skill.variations = skill.variations.filter(v => v.id !== varId);
-  render();
+  setCachedData(data); render();
 }
 
 // ===== AUTH INIT =====
@@ -322,6 +344,7 @@ async function initAuth() {
         await loadUserData();
       }
     } else if (event === 'SIGNED_OUT') {
+      clearCachedData();
       currentUser = null;
       data = { moves:[], combos:[], styling:[], footwork:[], isolations:[] };
       showAuthScreen();
