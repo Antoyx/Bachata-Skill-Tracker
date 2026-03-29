@@ -422,6 +422,8 @@ function makeSkillCard(skill, section) {
 
   const main = document.createElement('div');
   main.className = 'skill-card-main';
+  main.style.cursor = 'pointer';
+  main.addEventListener('click', () => openModal(section, skill.id));
 
   const bar = document.createElement('div');
   bar.className = `skill-level-bar bar-${skill.level}`;
@@ -458,19 +460,12 @@ function makeSkillCard(skill, section) {
   const actions = document.createElement('div');
   actions.className = 'skill-actions';
 
-  const editBtn = document.createElement('button');
-  editBtn.className = 'icon-btn';
-  editBtn.title = 'Edit';
-  editBtn.innerHTML = '&#9998;';
-  editBtn.addEventListener('click', () => openModal(section, skill.id));
-
   const delBtn = document.createElement('button');
   delBtn.className = 'icon-btn delete';
   delBtn.title = 'Delete';
   delBtn.innerHTML = '&#128465;';
-  delBtn.addEventListener('click', () => openDeleteModal(section, skill.id));
+  delBtn.addEventListener('click', e => { e.stopPropagation(); openDeleteModal(section, skill.id); });
 
-  actions.appendChild(editBtn);
   actions.appendChild(delBtn);
 
   main.appendChild(bar);

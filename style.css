@@ -200,6 +200,8 @@ main {
   display: flex;
   align-items: center;
   gap: 0.9rem;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .skill-level-bar {
