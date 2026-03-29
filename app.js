@@ -284,10 +284,17 @@ async function dbAddSkill(section, name, notes, level, difficulty) {
   setCachedData(data); render();
 }
 
-async function dbUpdateSkill(section, id, name, notes, level, difficulty) {
-  const { error } = await sb.from('skills').update({ name, notes, level, difficulty }).eq('id', id);
+async function dbUpdateSkill(section, id, name, notes, level, difficulty, newSection = section) {
+  const payload = { name, notes, level, difficulty };
+  if (newSection !== section) payload.section = newSection;
+  const { error } = await sb.from('skills').update(payload).eq('id', id);
   if (error) throw error;
-  Object.assign(data[section].find(s => s.id === id), { name, notes, level, difficulty });
+  const skill = data[section].find(s => s.id === id);
+  Object.assign(skill, { name, notes, level, difficulty });
+  if (newSection !== section) {
+    data[section] = data[section].filter(s => s.id !== id);
+    data[newSection].push(skill);
+  }
   setCachedData(data); render();
 }
 
@@ -614,10 +621,11 @@ document.querySelectorAll('.add-btn').forEach(btn => {
 // ===== SKILL MODAL =====
 const modalOverlay = document.getElementById('modalOverlay');
 const modalTitle   = document.getElementById('modalTitle');
-const skillNameEl  = document.getElementById('skillName');
-const skillNotesEl = document.getElementById('skillNotes');
-const levelPicker  = document.getElementById('levelPicker');
-const diffPicker   = document.getElementById('diffPicker');
+const skillNameEl    = document.getElementById('skillName');
+const skillNotesEl   = document.getElementById('skillNotes');
+const skillSectionEl = document.getElementById('skillSection');
+const levelPicker    = document.getElementById('levelPicker');
+const diffPicker     = document.getElementById('diffPicker');
 
 function openModal(section, id) {
   modalSection       = section;
@@ -625,6 +633,7 @@ function openModal(section, id) {
   selectedLevel      = 0;
   selectedDifficulty = 0;
 
+  skillSectionEl.value = section;
   if (id) {
     const skill = data[section].find(s => s.id === id);
     modalTitle.textContent = 'Edit Skill';
@@ -682,15 +691,16 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     return;
   }
   // Capture before closeModal clears them
-  const sec   = modalSection;
-  const id    = editingId;
-  const notes = skillNotesEl.value.trim();
-  const lvl   = selectedLevel;
-  const diff  = selectedDifficulty;
+  const sec        = modalSection;
+  const id         = editingId;
+  const notes      = skillNotesEl.value.trim();
+  const lvl        = selectedLevel;
+  const diff       = selectedDifficulty;
+  const targetSec  = skillSectionEl.value;
   closeModal();
   try {
-    if (id) await dbUpdateSkill(sec, id, name, notes, lvl, diff);
-    else    await dbAddSkill(sec, name, notes, lvl, diff);
+    if (id) await dbUpdateSkill(sec, id, name, notes, lvl, diff, targetSec);
+    else    await dbAddSkill(targetSec, name, notes, lvl, diff);
   } catch (err) { alert('Save failed: ' + err.message); }
 });
 
