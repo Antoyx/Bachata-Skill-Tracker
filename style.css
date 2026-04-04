@@ -248,6 +248,20 @@ main {
   flex-shrink: 0;
 }
 
+.section-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
 .icon-btn {
   background: none;
   border: 1px solid var(--border);
@@ -271,6 +285,16 @@ main {
   background: rgba(192, 67, 106, 0.15);
   color: var(--accent2);
   border-color: var(--accent);
+}
+.icon-btn.pin.active {
+  color: #f0b429;
+  border-color: rgba(183, 119, 13, 0.5);
+  background: rgba(183, 119, 13, 0.12);
+}
+.icon-btn.pin:hover {
+  color: #f0b429;
+  border-color: rgba(183, 119, 13, 0.5);
+  background: rgba(183, 119, 13, 0.12);
 }
 
 /* ===== VARIATIONS ===== */

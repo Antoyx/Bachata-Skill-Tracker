@@ -236,8 +236,8 @@ async function loadUserData() {
       if (!data[s.section]) return;
       const vars = (s.variations || [])
         .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
-        .map(v => ({ id:v.id, name:v.name, notes:v.notes || '', level:v.level, difficulty:v.difficulty ?? 0 }));
-      data[s.section].push({ id:s.id, name:s.name, notes:s.notes, level:s.level, difficulty:s.difficulty ?? 0, variations:vars });
+        .map(v => ({ id:v.id, name:v.name, notes:v.notes || '', level:v.level, difficulty:v.difficulty ?? 0, working_on:v.working_on ?? false }));
+      data[s.section].push({ id:s.id, name:s.name, notes:s.notes, level:s.level, difficulty:s.difficulty ?? 0, working_on:s.working_on ?? false, variations:vars });
     });
 
     setCachedData(data); // Keep cache fresh
@@ -280,7 +280,7 @@ async function dbAddSkill(section, name, notes, level, difficulty) {
     .insert({ user_id: currentUser.id, section, name, notes, level, difficulty })
     .select().single();
   if (error) throw error;
-  data[section].push({ id:s.id, name, notes, level, difficulty, variations:[] });
+  data[section].push({ id:s.id, name, notes, level, difficulty, working_on:false, variations:[] });
   setCachedData(data); render();
 }
 
@@ -313,7 +313,7 @@ async function dbAddVariation(section, skillId, name, notes, level, difficulty) 
   if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   if (!skill.variations) skill.variations = [];
-  skill.variations.push({ id:v.id, name, notes, level, difficulty });
+  skill.variations.push({ id:v.id, name, notes, level, difficulty, working_on:false });
   setCachedData(data); render();
 }
 
@@ -330,6 +330,26 @@ async function dbDeleteVariation(section, skillId, varId) {
   if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   skill.variations = skill.variations.filter(v => v.id !== varId);
+  setCachedData(data); render();
+}
+
+// ===== FOCUS TOGGLE =====
+async function dbToggleSkillFocus(section, id) {
+  const skill = data[section].find(s => s.id === id);
+  const newVal = !skill.working_on;
+  const { error } = await sb.from('skills').update({ working_on: newVal }).eq('id', id);
+  if (error) throw error;
+  skill.working_on = newVal;
+  setCachedData(data); render();
+}
+
+async function dbToggleVariationFocus(section, skillId, varId) {
+  const skill = data[section].find(s => s.id === skillId);
+  const variation = skill.variations.find(v => v.id === varId);
+  const newVal = !variation.working_on;
+  const { error } = await sb.from('variations').update({ working_on: newVal }).eq('id', varId);
+  if (error) throw error;
+  variation.working_on = newVal;
   setCachedData(data); render();
 }
 
@@ -373,6 +393,7 @@ async function initAuth() {
 function render() {
   SECTIONS.forEach(sec => renderSection(sec));
   renderProgressSummary();
+  if (activeSection === 'focus') renderFocusSection();
 }
 
 function renderSection(section) {
@@ -460,12 +481,23 @@ function makeSkillCard(skill, section) {
   const actions = document.createElement('div');
   actions.className = 'skill-actions';
 
+  const pinBtn = document.createElement('button');
+  pinBtn.className = 'icon-btn pin' + (skill.working_on ? ' active' : '');
+  pinBtn.title = skill.working_on ? 'Remove from Focus' : 'Add to Focus';
+  pinBtn.innerHTML = '&#128204;';
+  pinBtn.addEventListener('click', async e => {
+    e.stopPropagation();
+    try { await dbToggleSkillFocus(section, skill.id); }
+    catch (err) { alert('Failed: ' + err.message); }
+  });
+
   const delBtn = document.createElement('button');
   delBtn.className = 'icon-btn delete';
   delBtn.title = 'Delete';
   delBtn.innerHTML = '&#128465;';
   delBtn.addEventListener('click', e => { e.stopPropagation(); openDeleteModal(section, skill.id); });
 
+  actions.appendChild(pinBtn);
   actions.appendChild(delBtn);
 
   main.appendChild(bar);
@@ -540,6 +572,16 @@ function makeVariationRow(variation, skillId, section) {
   const actions = document.createElement('div');
   actions.className = 'var-actions';
 
+  const pinBtn = document.createElement('button');
+  pinBtn.className = 'icon-btn pin' + (variation.working_on ? ' active' : '');
+  pinBtn.title = variation.working_on ? 'Remove from Focus' : 'Add to Focus';
+  pinBtn.innerHTML = '&#128204;';
+  pinBtn.addEventListener('click', async e => {
+    e.stopPropagation();
+    try { await dbToggleVariationFocus(section, skillId, variation.id); }
+    catch (err) { alert('Failed: ' + err.message); }
+  });
+
   const editBtn = document.createElement('button');
   editBtn.className = 'icon-btn';
   editBtn.title = 'Edit';
@@ -552,6 +594,7 @@ function makeVariationRow(variation, skillId, section) {
   delBtn.innerHTML = '&#128465;';
   delBtn.addEventListener('click', () => dbDeleteVariation(section, skillId, variation.id));
 
+  actions.appendChild(pinBtn);
   actions.appendChild(editBtn);
   actions.appendChild(delBtn);
 
@@ -596,6 +639,99 @@ function renderProgressSummary() {
   });
 }
 
+const SECTION_LABELS = {
+  moves:'Moves', combos:'Combos', styling:'Styling',
+  footwork:'Footwork', isolations:'Body Isolations', intros:'Intro Ideas',
+};
+
+function renderFocusSection() {
+  const listEl = document.getElementById('focus-list');
+  listEl.innerHTML = '';
+
+  const focusedSkills = [];
+  const focusedVars   = [];
+  SECTIONS.forEach(sec => {
+    data[sec].forEach(skill => {
+      if (skill.working_on) focusedSkills.push({ skill, section: sec });
+      (skill.variations || []).forEach(v => {
+        if (v.working_on) focusedVars.push({ variation: v, skill, section: sec });
+      });
+    });
+  });
+
+  if (focusedSkills.length === 0 && focusedVars.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'skill-empty';
+    empty.textContent = 'No items in focus yet — pin skills or variations with the 📌 button.';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  [...focusedSkills, ...focusedVars].forEach(entry => {
+    const isVar = !!entry.variation;
+    const item  = isVar ? entry.variation : entry.skill;
+    const card  = document.createElement('div');
+    card.className = 'skill-card focus-item';
+
+    const bar = document.createElement('div');
+    bar.className = `skill-level-bar bar-${item.level}`;
+
+    const info = document.createElement('div');
+    info.className = 'skill-info';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'skill-name';
+    nameEl.textContent = isVar ? `${item.name}` : item.name;
+    info.appendChild(nameEl);
+
+    if (isVar) {
+      const parentEl = document.createElement('div');
+      parentEl.className = 'skill-notes';
+      parentEl.textContent = `Variation of: ${entry.skill.name}`;
+      info.appendChild(parentEl);
+    } else if (item.notes) {
+      const notesEl = document.createElement('div');
+      notesEl.className = 'skill-notes';
+      notesEl.textContent = item.notes;
+      info.appendChild(notesEl);
+    }
+
+    const badges = document.createElement('div');
+    badges.style.cssText = 'display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;flex-shrink:0;';
+
+    const sectionBadge = document.createElement('span');
+    sectionBadge.className = 'section-badge';
+    sectionBadge.textContent = SECTION_LABELS[entry.section];
+    badges.appendChild(sectionBadge);
+
+    const levelBadge = document.createElement('span');
+    levelBadge.className = `skill-badge level-${item.level}`;
+    levelBadge.textContent = LEVELS[item.level].short;
+    badges.appendChild(levelBadge);
+
+    const actions = document.createElement('div');
+    actions.className = 'skill-actions';
+
+    const unpinBtn = document.createElement('button');
+    unpinBtn.className = 'icon-btn pin active';
+    unpinBtn.title = 'Remove from Focus';
+    unpinBtn.innerHTML = '&#128204;';
+    unpinBtn.addEventListener('click', async () => {
+      try {
+        if (isVar) await dbToggleVariationFocus(entry.section, entry.skill.id, item.id);
+        else       await dbToggleSkillFocus(entry.section, item.id);
+      } catch (err) { alert('Failed: ' + err.message); }
+    });
+    actions.appendChild(unpinBtn);
+
+    card.appendChild(bar);
+    card.appendChild(info);
+    card.appendChild(badges);
+    card.appendChild(actions);
+    listEl.appendChild(card);
+  });
+}
+
 // ===== NAVIGATION =====
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -605,7 +741,8 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.skill-section').forEach(s => s.classList.remove('active'));
     document.getElementById(activeSection).classList.add('active');
-    renderSection(activeSection);
+    if (activeSection === 'focus') renderFocusSection();
+    else renderSection(activeSection);
   });
 });
 
