@@ -498,6 +498,8 @@ main {
 .diff-opt[data-diff="2"].selected { background: #922b21; }
 
 /* Difficulty badge on cards */
+.diff-badge { display: none; }
+.diff-picker { display: none; }
 .diff-badge {
   font-size: 0.68rem;
   font-weight: 700;
