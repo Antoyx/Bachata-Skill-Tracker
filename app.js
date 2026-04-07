@@ -109,18 +109,16 @@ let activeFilter  = 'all';
 const expandedCards = {};
 
 // Skill modal state
-let modalSection       = null;
-let editingId          = null;
-let selectedLevel      = 0;
-let selectedDifficulty = 0;
+let modalSection  = null;
+let editingId     = null;
+let selectedLevel = 0;
 
 // Variation modal state
-let varSection    = null;
-let varSkillId    = null;
-let varEditingId  = null;
-let varLevel      = 0;
-let varDifficulty = 0;
-let varNotes      = '';
+let varSection   = null;
+let varSkillId   = null;
+let varEditingId = null;
+let varLevel     = 0;
+let varNotes     = '';
 
 // Delete state
 let deleteSection = null;
@@ -467,15 +465,10 @@ function makeSkillCard(skill, section) {
   const badges = document.createElement('div');
   badges.style.cssText = 'display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;flex-shrink:0;';
 
-  const diffBadge = document.createElement('span');
-  diffBadge.className = `diff-badge diff-${skill.difficulty ?? 0}`;
-  diffBadge.textContent = DIFFICULTIES[skill.difficulty ?? 0].short;
-
   const levelBadge = document.createElement('span');
   levelBadge.className = `skill-badge level-${skill.level}`;
   levelBadge.textContent = LEVELS[skill.level].short;
 
-  badges.appendChild(diffBadge);
   badges.appendChild(levelBadge);
 
   const actions = document.createElement('div');
@@ -559,11 +552,6 @@ function makeVariationRow(variation, skillId, section) {
     nameEl.appendChild(varNotesSpan);
   }
 
-  const vdiff = variation.difficulty ?? 0;
-  const diffBadge = document.createElement('span');
-  diffBadge.className = `diff-badge diff-${vdiff}`;
-  diffBadge.textContent = DIFFICULTIES[vdiff].short;
-
   const badge = document.createElement('span');
   badge.className = `skill-badge level-${variation.level}`;
   badge.style.fontSize = '0.65rem';
@@ -599,7 +587,6 @@ function makeVariationRow(variation, skillId, section) {
   actions.appendChild(delBtn);
 
   row.appendChild(nameEl);
-  row.appendChild(diffBadge);
   row.appendChild(badge);
   row.appendChild(actions);
   return row;
@@ -756,14 +743,12 @@ const modalTitle   = document.getElementById('modalTitle');
 const skillNameEl    = document.getElementById('skillName');
 const skillNotesEl   = document.getElementById('skillNotes');
 const skillSectionEl = document.getElementById('skillSection');
-const levelPicker    = document.getElementById('levelPicker');
-const diffPicker     = document.getElementById('diffPicker');
+const levelPicker = document.getElementById('levelPicker');
 
 function openModal(section, id) {
-  modalSection       = section;
-  editingId          = id;
-  selectedLevel      = 0;
-  selectedDifficulty = 0;
+  modalSection  = section;
+  editingId     = id;
+  selectedLevel = 0;
 
   skillSectionEl.value = section;
   if (id) {
@@ -772,7 +757,6 @@ function openModal(section, id) {
     skillNameEl.value      = skill.name;
     skillNotesEl.value     = skill.notes;
     selectedLevel          = skill.level;
-    selectedDifficulty     = skill.difficulty ?? 0;
   } else {
     modalTitle.textContent = 'Add Skill';
     skillNameEl.value  = '';
@@ -780,7 +764,6 @@ function openModal(section, id) {
   }
 
   updateLevelPicker();
-  updateDiffPicker();
   modalOverlay.classList.add('open');
   setTimeout(() => skillNameEl.focus(), 50);
 }
@@ -794,21 +777,12 @@ function closeModal() {
 function updateLevelPicker() {
   levelPicker.querySelectorAll('.level-opt').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.level) === selectedLevel));
 }
-function updateDiffPicker() {
-  diffPicker.querySelectorAll('.diff-opt').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.diff) === selectedDifficulty));
-}
 
 levelPicker.addEventListener('click', e => {
   const btn = e.target.closest('.level-opt');
   if (!btn) return;
   selectedLevel = parseInt(btn.dataset.level);
   updateLevelPicker();
-});
-diffPicker.addEventListener('click', e => {
-  const btn = e.target.closest('.diff-opt');
-  if (!btn) return;
-  selectedDifficulty = parseInt(btn.dataset.diff);
-  updateDiffPicker();
 });
 
 document.getElementById('modalClose').addEventListener('click', closeModal);
@@ -823,12 +797,12 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     return;
   }
   // Capture before closeModal clears them
-  const sec        = modalSection;
-  const id         = editingId;
-  const notes      = skillNotesEl.value.trim();
-  const lvl        = selectedLevel;
-  const diff       = selectedDifficulty;
-  const targetSec  = skillSectionEl.value;
+  const sec       = modalSection;
+  const id        = editingId;
+  const notes     = skillNotesEl.value.trim();
+  const lvl       = selectedLevel;
+  const diff      = id ? (data[sec].find(s => s.id === id)?.difficulty ?? 0) : 0;
+  const targetSec = skillSectionEl.value;
   closeModal();
   try {
     if (id) await dbUpdateSkill(sec, id, name, notes, lvl, diff, targetSec);
@@ -843,16 +817,14 @@ skillNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') document.g
 const varModalOverlay = document.getElementById('varModalOverlay');
 const varModalTitle   = document.getElementById('varModalTitle');
 const varNameEl       = document.getElementById('varName');
-const varNotesEl      = document.getElementById('varNotes');
-const varDiffPicker   = document.getElementById('varDiffPicker');
-const varLevelPicker  = document.getElementById('varLevelPicker');
+const varNotesEl     = document.getElementById('varNotes');
+const varLevelPicker = document.getElementById('varLevelPicker');
 
 function openVarModal(section, skillId, variationId) {
-  varSection    = section;
-  varSkillId    = skillId;
-  varEditingId  = variationId;
-  varLevel      = 0;
-  varDifficulty = 0;
+  varSection   = section;
+  varSkillId   = skillId;
+  varEditingId = variationId;
+  varLevel     = 0;
 
   expandedCards[skillId] = true;
 
@@ -863,7 +835,6 @@ function openVarModal(section, skillId, variationId) {
     varNameEl.value  = v.name;
     varNotesEl.value = v.notes || '';
     varLevel         = v.level;
-    varDifficulty    = v.difficulty ?? 0;
   } else {
     varModalTitle.textContent = 'Add Variation';
     varNameEl.value  = '';
@@ -871,7 +842,6 @@ function openVarModal(section, skillId, variationId) {
   }
 
   updateVarLevelPicker();
-  updateVarDiffPicker();
   varModalOverlay.classList.add('open');
   setTimeout(() => varNameEl.focus(), 50);
 }
@@ -886,21 +856,12 @@ function closeVarModal() {
 function updateVarLevelPicker() {
   varLevelPicker.querySelectorAll('.level-opt').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.level) === varLevel));
 }
-function updateVarDiffPicker() {
-  varDiffPicker.querySelectorAll('.diff-opt').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.diff) === varDifficulty));
-}
 
 varLevelPicker.addEventListener('click', e => {
   const btn = e.target.closest('.level-opt');
   if (!btn) return;
   varLevel = parseInt(btn.dataset.level);
   updateVarLevelPicker();
-});
-varDiffPicker.addEventListener('click', e => {
-  const btn = e.target.closest('.diff-opt');
-  if (!btn) return;
-  varDifficulty = parseInt(btn.dataset.diff);
-  updateVarDiffPicker();
 });
 
 document.getElementById('varModalClose').addEventListener('click', closeVarModal);
@@ -919,7 +880,7 @@ document.getElementById('varModalSave').addEventListener('click', async () => {
   const vId   = varEditingId;
   const notes = varNotesEl.value.trim();
   const lvl   = varLevel;
-  const diff  = varDifficulty;
+  const diff  = vId ? (data[sec].find(s => s.id === skId)?.variations.find(v => v.id === vId)?.difficulty ?? 0) : 0;
   closeVarModal();
   try {
     if (vId) await dbUpdateVariation(sec, skId, vId, name, notes, lvl, diff);
