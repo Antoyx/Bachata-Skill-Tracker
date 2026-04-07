@@ -19,9 +19,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
-          claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
-          claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+          claude_oauth_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
           prompt: |
             A GitHub issue labeled 'ready-to-implement' needs to be built.
             
