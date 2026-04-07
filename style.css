@@ -69,12 +69,6 @@ h1 {
   background-clip: text;
 }
 
-.subtitle {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
 
 /* Progress summary pills */
 .progress-summary {
@@ -677,13 +671,6 @@ main {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-.auth-tagline {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: 0.1rem;
 }
 
 .auth-tabs {
