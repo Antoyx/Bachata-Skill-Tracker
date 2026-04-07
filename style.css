@@ -115,6 +115,11 @@ nav::-webkit-scrollbar { display: none; }
   color: var(--accent2);
   border-bottom-color: var(--accent2);
 }
+.nav-btn-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 /* ===== MAIN ===== */
 main {
