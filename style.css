@@ -115,6 +115,10 @@ nav::-webkit-scrollbar { display: none; }
   color: var(--accent2);
   border-bottom-color: var(--accent2);
 }
+.nav-btn-static {
+  pointer-events: none;
+  cursor: default;
+}
 
 /* ===== MAIN ===== */
 main {
