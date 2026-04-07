@@ -490,48 +490,6 @@ main {
 .modal-body input::placeholder,
 .modal-body textarea::placeholder { color: var(--text-muted); }
 
-/* Difficulty Picker */
-.diff-picker {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.diff-opt {
-  background: var(--surface2);
-  border: 2px solid var(--border);
-  color: var(--text-muted);
-  padding: 0.5rem 0.4rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-.diff-opt:hover { border-color: #4a4a62; color: var(--text); }
-.diff-opt.selected { color: #fff; border-color: transparent; }
-.diff-opt[data-diff="0"].selected { background: #2471a3; }
-.diff-opt[data-diff="1"].selected { background: #b7770d; color: #fff; }
-.diff-opt[data-diff="2"].selected { background: #922b21; }
-
-/* Difficulty badge on cards */
-.diff-badge { display: none; }
-.diff-picker { display: none; }
-.diff-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  flex-shrink: 0;
-  border: 1px solid transparent;
-}
-.diff-0 { background: rgba(36, 113, 163, 0.2); color: #5dade2; border-color: rgba(36,113,163,0.4); }
-.diff-1 { background: rgba(183, 119, 13, 0.2); color: #f0b429; border-color: rgba(183,119,13,0.4); }
-.diff-2 { background: rgba(146, 43, 33, 0.2); color: #e74c3c; border-color: rgba(146,43,33,0.4); }
 
 /* Level Picker */
 .level-picker {
