@@ -115,6 +115,12 @@ nav::-webkit-scrollbar { display: none; }
   color: var(--accent2);
   border-bottom-color: var(--accent2);
 }
+.nav-btn--disabled,
+.nav-btn--disabled:hover {
+  cursor: default;
+  opacity: 1;
+  color: var(--text-muted);
+}
 
 /* ===== MAIN ===== */
 main {
