@@ -703,13 +703,20 @@ function renderFocusSection() {
     unpinBtn.className = 'icon-btn pin active';
     unpinBtn.title = 'Remove from Focus';
     unpinBtn.innerHTML = '&#128204;';
-    unpinBtn.addEventListener('click', async () => {
+    unpinBtn.addEventListener('click', async e => {
+      e.stopPropagation();
       try {
         if (isVar) await dbToggleVariationFocus(entry.section, entry.skill.id, item.id);
         else       await dbToggleSkillFocus(entry.section, item.id);
       } catch (err) { alert('Failed: ' + err.message); }
     });
     actions.appendChild(unpinBtn);
+
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      if (isVar) openVarModal(entry.section, entry.skill.id, item.id);
+      else       openModal(entry.section, item.id);
+    });
 
     card.appendChild(bar);
     card.appendChild(info);
