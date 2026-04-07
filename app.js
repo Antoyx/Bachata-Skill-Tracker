@@ -933,5 +933,25 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeModal(); closeVarModal(); closeDeleteModal(); }
 });
 
+// ===== THEME SWITCHER =====
+const THEMES = ['rose', 'ocean', 'amber'];
+
+function applyTheme(theme) {
+  if (theme === 'rose') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  document.querySelectorAll('.theme-dot').forEach(dot => {
+    dot.classList.toggle('active', dot.dataset.theme === theme);
+  });
+}
+
+document.getElementById('themeSwitcher').addEventListener('click', e => {
+  const dot = e.target.closest('.theme-dot');
+  if (!dot) return;
+  applyTheme(dot.dataset.theme);
+});
+
 // ===== INIT =====
 initAuth();
