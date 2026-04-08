@@ -124,10 +124,48 @@ let varNotes     = '';
 let deleteSection = null;
 let deleteId      = null;
 
+// ===== OFFLINE / SYNC STATE =====
+let isOnline = navigator.onLine;
+let isSyncing = false;
+
 // ===== LOADING =====
 const loadingOverlay = document.getElementById('loadingOverlay');
 function showLoading() { loadingOverlay.classList.remove('hidden'); }
 function hideLoading() { loadingOverlay.classList.add('hidden'); }
+
+// ===== OFFLINE BANNER =====
+const offlineBanner = document.getElementById('offlineBanner');
+const offlineBannerText = document.getElementById('offlineBannerText');
+
+function showOfflineBanner(text) {
+  offlineBannerText.textContent = text || "You're offline — changes saved locally";
+  offlineBanner.classList.remove('hidden', 'syncing');
+  if (text && text.startsWith('Syncing')) offlineBanner.classList.add('syncing');
+}
+function hideOfflineBanner() {
+  offlineBanner.classList.add('hidden');
+  offlineBanner.classList.remove('syncing');
+}
+
+window.addEventListener('offline', () => { isOnline = false; showOfflineBanner(); });
+window.addEventListener('online', () => { isOnline = true; syncPendingOps(); });
+
+// ===== PENDING OPS QUEUE =====
+function pendingOpsKey() { return `bachata_pending_${currentUser.id}`; }
+function getPendingOps() {
+  try { return JSON.parse(localStorage.getItem(pendingOpsKey()) || '[]'); } catch { return []; }
+}
+function setPendingOps(ops) {
+  try { localStorage.setItem(pendingOpsKey(), JSON.stringify(ops)); } catch {}
+}
+function enqueuePendingOp(op, payload) {
+  const ops = getPendingOps();
+  ops.push({ op, payload, ts: Date.now() });
+  setPendingOps(ops);
+}
+function clearPendingOps() {
+  try { localStorage.removeItem(pendingOpsKey()); } catch {}
+}
 
 // ===== AUTH UI =====
 function showAuthScreen() {
@@ -140,6 +178,7 @@ function showApp() {
   const ui = document.getElementById('userInfo');
   ui.style.display = 'flex';
   document.getElementById('userEmailDisplay').textContent = currentUser.email;
+  if (!isOnline) showOfflineBanner();
 }
 
 // Auth tab switching
@@ -240,6 +279,9 @@ async function loadUserData() {
 
     setCachedData(data); // Keep cache fresh
     render();
+    if (isOnline && getPendingOps().length > 0) {
+      await syncPendingOps();
+    }
   } catch (err) {
     if (!cached) alert('Failed to load data: ' + err.message);
     // If cache exists, silently ignore — user sees last known data
@@ -274,19 +316,19 @@ async function seedDefaultData() {
 
 // ===== CRUD – SKILLS =====
 async function dbAddSkill(section, name, notes, level, difficulty) {
-  const { data: s, error } = await sb.from('skills')
-    .insert({ user_id: currentUser.id, section, name, notes, level, difficulty })
-    .select().single();
-  if (error) throw error;
-  data[section].push({ id:s.id, name, notes, level, difficulty, working_on:false, variations:[] });
+  const id = crypto.randomUUID();
+  data[section].push({ id, name, notes, level, difficulty, working_on: false, variations: [] });
   setCachedData(data); render();
+  if (!isOnline) {
+    enqueuePendingOp('addSkill', { id, user_id: currentUser.id, section, name, notes, level, difficulty, working_on: false });
+    return;
+  }
+  const { error } = await sb.from('skills')
+    .insert({ id, user_id: currentUser.id, section, name, notes, level, difficulty });
+  if (error) throw error;
 }
 
 async function dbUpdateSkill(section, id, name, notes, level, difficulty, newSection = section) {
-  const payload = { name, notes, level, difficulty };
-  if (newSection !== section) payload.section = newSection;
-  const { error } = await sb.from('skills').update(payload).eq('id', id);
-  if (error) throw error;
   const skill = data[section].find(s => s.id === id);
   Object.assign(skill, { name, notes, level, difficulty });
   if (newSection !== section) {
@@ -294,61 +336,179 @@ async function dbUpdateSkill(section, id, name, notes, level, difficulty, newSec
     data[newSection].push(skill);
   }
   setCachedData(data); render();
+  if (!isOnline) {
+    enqueuePendingOp('updateSkill', { id, name, notes, level, difficulty, section: newSection });
+    return;
+  }
+  const payload = { name, notes, level, difficulty };
+  if (newSection !== section) payload.section = newSection;
+  const { error } = await sb.from('skills').update(payload).eq('id', id);
+  if (error) throw error;
 }
 
 async function dbDeleteSkill(section, id) {
-  const { error } = await sb.from('skills').delete().eq('id', id);
-  if (error) throw error;
   data[section] = data[section].filter(s => s.id !== id);
   setCachedData(data); render();
+  if (!isOnline) { enqueuePendingOp('deleteSkill', { id }); return; }
+  const { error } = await sb.from('skills').delete().eq('id', id);
+  if (error) throw error;
 }
 
 // ===== CRUD – VARIATIONS =====
 async function dbAddVariation(section, skillId, name, notes, level, difficulty) {
-  const { data: v, error } = await sb.from('variations')
-    .insert({ skill_id: skillId, user_id: currentUser.id, name, notes, level, difficulty })
-    .select().single();
-  if (error) throw error;
+  const id = crypto.randomUUID();
   const skill = data[section].find(s => s.id === skillId);
   if (!skill.variations) skill.variations = [];
-  skill.variations.push({ id:v.id, name, notes, level, difficulty, working_on:false });
+  skill.variations.push({ id, name, notes, level, difficulty, working_on: false });
   setCachedData(data); render();
+  if (!isOnline) {
+    enqueuePendingOp('addVariation', { id, skill_id: skillId, user_id: currentUser.id, name, notes, level, difficulty, working_on: false });
+    return;
+  }
+  const { error } = await sb.from('variations')
+    .insert({ id, skill_id: skillId, user_id: currentUser.id, name, notes, level, difficulty });
+  if (error) throw error;
 }
 
 async function dbUpdateVariation(section, skillId, varId, name, notes, level, difficulty) {
-  const { error } = await sb.from('variations').update({ name, notes, level, difficulty }).eq('id', varId);
-  if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   Object.assign(skill.variations.find(v => v.id === varId), { name, notes, level, difficulty });
   setCachedData(data); render();
+  if (!isOnline) { enqueuePendingOp('updateVariation', { varId, name, notes, level, difficulty }); return; }
+  const { error } = await sb.from('variations').update({ name, notes, level, difficulty }).eq('id', varId);
+  if (error) throw error;
 }
 
 async function dbDeleteVariation(section, skillId, varId) {
-  const { error } = await sb.from('variations').delete().eq('id', varId);
-  if (error) throw error;
   const skill = data[section].find(s => s.id === skillId);
   skill.variations = skill.variations.filter(v => v.id !== varId);
   setCachedData(data); render();
+  if (!isOnline) { enqueuePendingOp('deleteVariation', { varId }); return; }
+  const { error } = await sb.from('variations').delete().eq('id', varId);
+  if (error) throw error;
 }
 
 // ===== FOCUS TOGGLE =====
 async function dbToggleSkillFocus(section, id) {
   const skill = data[section].find(s => s.id === id);
   const newVal = !skill.working_on;
-  const { error } = await sb.from('skills').update({ working_on: newVal }).eq('id', id);
-  if (error) throw error;
   skill.working_on = newVal;
   setCachedData(data); render();
+  if (!isOnline) { enqueuePendingOp('toggleSkillFocus', { id, newVal }); return; }
+  const { error } = await sb.from('skills').update({ working_on: newVal }).eq('id', id);
+  if (error) throw error;
 }
 
 async function dbToggleVariationFocus(section, skillId, varId) {
   const skill = data[section].find(s => s.id === skillId);
   const variation = skill.variations.find(v => v.id === varId);
   const newVal = !variation.working_on;
-  const { error } = await sb.from('variations').update({ working_on: newVal }).eq('id', varId);
-  if (error) throw error;
   variation.working_on = newVal;
   setCachedData(data); render();
+  if (!isOnline) { enqueuePendingOp('toggleVariationFocus', { varId, newVal }); return; }
+  const { error } = await sb.from('variations').update({ working_on: newVal }).eq('id', varId);
+  if (error) throw error;
+}
+
+// ===== OFFLINE SYNC =====
+function collapsePendingOps(ops) {
+  const deletedSkillIds = new Set(ops.filter(o => o.op === 'deleteSkill').map(o => o.payload.id));
+  const deletedVarIds = new Set(ops.filter(o => o.op === 'deleteVariation').map(o => o.payload.varId));
+
+  ops = ops.filter(o => {
+    if (o.op === 'addSkill' && deletedSkillIds.has(o.payload.id)) return false;
+    if (o.op === 'addVariation' && deletedVarIds.has(o.payload.varId)) return false;
+    if (['updateSkill', 'toggleSkillFocus'].includes(o.op) && deletedSkillIds.has(o.payload.id)) return false;
+    if (['updateVariation', 'toggleVariationFocus'].includes(o.op) && deletedVarIds.has(o.payload.varId)) return false;
+    return true;
+  });
+
+  const lastUpdate = {};
+  ops.forEach((o, i) => {
+    if (o.op === 'updateSkill') lastUpdate[`skill_${o.payload.id}`] = i;
+    if (o.op === 'updateVariation') lastUpdate[`var_${o.payload.varId}`] = i;
+  });
+  return ops.filter((o, i) => {
+    if (o.op === 'updateSkill') return lastUpdate[`skill_${o.payload.id}`] === i;
+    if (o.op === 'updateVariation') return lastUpdate[`var_${o.payload.varId}`] === i;
+    return true;
+  });
+}
+
+async function replayOp(op, payload) {
+  let error;
+  switch (op) {
+    case 'addSkill':
+      ({ error } = await sb.from('skills').insert({
+        id: payload.id, user_id: payload.user_id, section: payload.section,
+        name: payload.name, notes: payload.notes, level: payload.level,
+        difficulty: payload.difficulty, working_on: payload.working_on,
+      }));
+      break;
+    case 'updateSkill': {
+      const p = { name: payload.name, notes: payload.notes, level: payload.level, difficulty: payload.difficulty };
+      if (payload.section) p.section = payload.section;
+      ({ error } = await sb.from('skills').update(p).eq('id', payload.id));
+      break;
+    }
+    case 'deleteSkill':
+      ({ error } = await sb.from('skills').delete().eq('id', payload.id));
+      break;
+    case 'toggleSkillFocus':
+      ({ error } = await sb.from('skills').update({ working_on: payload.newVal }).eq('id', payload.id));
+      break;
+    case 'addVariation':
+      ({ error } = await sb.from('variations').insert({
+        id: payload.id, skill_id: payload.skill_id, user_id: payload.user_id,
+        name: payload.name, notes: payload.notes, level: payload.level,
+        difficulty: payload.difficulty, working_on: payload.working_on,
+      }));
+      break;
+    case 'updateVariation':
+      ({ error } = await sb.from('variations')
+        .update({ name: payload.name, notes: payload.notes, level: payload.level, difficulty: payload.difficulty })
+        .eq('id', payload.varId));
+      break;
+    case 'deleteVariation':
+      ({ error } = await sb.from('variations').delete().eq('id', payload.varId));
+      break;
+    case 'toggleVariationFocus':
+      ({ error } = await sb.from('variations').update({ working_on: payload.newVal }).eq('id', payload.varId));
+      break;
+    default:
+      console.warn('Unknown pending op:', op);
+      return;
+  }
+  if (error) throw error;
+}
+
+async function syncPendingOps() {
+  if (isSyncing) return;
+  let ops = getPendingOps();
+  if (ops.length === 0) { hideOfflineBanner(); return; }
+
+  ops = collapsePendingOps(ops);
+  setPendingOps(ops);
+  isSyncing = true;
+  showLoading();
+  showOfflineBanner('Syncing changes...');
+
+  for (let i = 0; i < ops.length; i++) {
+    try { await replayOp(ops[i].op, ops[i].payload); }
+    catch (err) {
+      setPendingOps(ops.slice(i));
+      isSyncing = false;
+      hideLoading();
+      showOfflineBanner('Sync failed — will retry on reconnect');
+      return;
+    }
+  }
+
+  clearPendingOps();
+  isSyncing = false;
+  hideLoading();
+  hideOfflineBanner();
+  await loadUserData();
 }
 
 // ===== AUTH INIT =====
@@ -380,9 +540,11 @@ async function initAuth() {
       }
     } else if (event === 'SIGNED_OUT') {
       clearCachedData();
+      clearPendingOps();
       currentUser = null;
       data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
       showAuthScreen();
+      hideOfflineBanner();
     }
   });
 }

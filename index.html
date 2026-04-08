@@ -4,10 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bachata Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#c0436a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bachata" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+  <!-- OFFLINE BANNER -->
+  <div class="offline-banner hidden" id="offlineBanner">
+    <span id="offlineBannerText">You're offline — changes saved locally</span>
+  </div>
 
   <!-- AUTH SCREEN -->
   <div class="auth-overlay" id="authOverlay">
@@ -238,5 +248,12 @@
   </div>
 
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(function(err) {
+        console.warn('SW registration failed:', err);
+      });
+    }
+  </script>
 </body>
 </html>
