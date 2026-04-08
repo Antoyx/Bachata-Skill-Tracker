@@ -820,7 +820,15 @@ function renderFocusSection() {
     const isVar = !!entry.variation;
     const item  = isVar ? entry.variation : entry.skill;
     const card  = document.createElement('div');
-    card.className = 'skill-card focus-item';
+    card.className = 'skill-card';
+
+    const main = document.createElement('div');
+    main.className = 'skill-card-main';
+    main.style.cursor = 'pointer';
+    main.addEventListener('click', () => {
+      if (isVar) openVarModal(entry.section, entry.skill.id, item.id);
+      else       openModal(entry.section, item.id);
+    });
 
     const bar = document.createElement('div');
     bar.className = `skill-level-bar bar-${item.level}`;
@@ -830,7 +838,7 @@ function renderFocusSection() {
 
     const nameEl = document.createElement('div');
     nameEl.className = 'skill-name';
-    nameEl.textContent = isVar ? `${item.name}` : item.name;
+    nameEl.textContent = item.name;
     info.appendChild(nameEl);
 
     if (isVar) {
@@ -874,16 +882,11 @@ function renderFocusSection() {
     });
     actions.appendChild(unpinBtn);
 
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', () => {
-      if (isVar) openVarModal(entry.section, entry.skill.id, item.id);
-      else       openModal(entry.section, item.id);
-    });
-
-    card.appendChild(bar);
-    card.appendChild(info);
-    card.appendChild(badges);
-    card.appendChild(actions);
+    main.appendChild(bar);
+    main.appendChild(info);
+    main.appendChild(badges);
+    main.appendChild(actions);
+    card.appendChild(main);
     listEl.appendChild(card);
   });
 }
