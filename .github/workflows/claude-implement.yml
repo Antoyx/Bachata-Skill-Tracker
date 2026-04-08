@@ -23,7 +23,8 @@ jobs:
           claude_args: --dangerously-skip-permissions
           prompt: |
             A GitHub issue labeled 'ready-to-implement' needs to be built.
-            
-            Read the issue carefully, implement the feature following the 
-            project's conventions in CLAUDE.md, then open a pull request 
-            referencing the issue.
+
+            Read the issue carefully, implement the feature following the
+            project's conventions in CLAUDE.md, then open a pull request
+            referencing the issue. Assign the pull request to the GitHub user
+            "Antoyx" using: gh pr edit <PR-URL> --add-assignee Antoyx
