@@ -200,6 +200,25 @@ document.getElementById('authSubmit').addEventListener('click', async () => {
 
   if (!email || !password) { errorEl.textContent = 'Email and password are required.'; return; }
 
+  // Offline: sign-up is impossible; for login, restore from cached session if email matches
+  if (!isOnline) {
+    if (authMode === 'signup') {
+      errorEl.style.color = '#e74c3c';
+      errorEl.textContent = "You're offline — creating an account requires an internet connection.";
+      return;
+    }
+    const offlineUser = getOfflineUser();
+    if (offlineUser && offlineUser.email === email && getCachedDataForUser(offlineUser.id)) {
+      currentUser = offlineUser;
+      showApp();
+      await loadUserData();
+      return;
+    }
+    errorEl.style.color = '#e74c3c';
+    errorEl.textContent = "You're offline — signing in requires an internet connection.";
+    return;
+  }
+
   showLoading();
   try {
     const fn = authMode === 'login' ? 'signInWithPassword' : 'signUp';
@@ -238,6 +257,22 @@ function setCachedData(d) {
 }
 function clearCachedData() {
   if (currentUser) localStorage.removeItem(cacheKey());
+}
+function getCachedDataForUser(userId) {
+  try { return JSON.parse(localStorage.getItem(`bachata_cache_v2_${userId}`) || 'null'); } catch { return null; }
+}
+
+// ===== OFFLINE USER CACHE =====
+// Stores minimal user info so the app can restore a session when offline.
+// Only written on successful sign-in; cleared on sign-out.
+function saveOfflineUser(user) {
+  try { localStorage.setItem('bachata_offline_user', JSON.stringify({ id: user.id, email: user.email })); } catch {}
+}
+function getOfflineUser() {
+  try { return JSON.parse(localStorage.getItem('bachata_offline_user') || 'null'); } catch { return null; }
+}
+function clearOfflineUser() {
+  try { localStorage.removeItem('bachata_offline_user'); } catch {}
 }
 
 // ===== DATA =====
@@ -518,13 +553,32 @@ async function initAuth() {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
       currentUser = session.user;
+      saveOfflineUser(session.user);
       showApp();
       await loadUserData();
     } else {
-      showAuthScreen();
+      // No active session — if offline, restore from the previously saved user
+      const offlineUser = !isOnline ? getOfflineUser() : null;
+      if (offlineUser && getCachedDataForUser(offlineUser.id)) {
+        currentUser = offlineUser;
+        showApp();
+        await loadUserData();
+      } else {
+        showAuthScreen();
+      }
     }
   } catch (err) {
     console.error('Auth init error:', err);
+    // Network failure while offline: attempt to recover from cached user
+    if (!isOnline) {
+      const offlineUser = getOfflineUser();
+      if (offlineUser && getCachedDataForUser(offlineUser.id)) {
+        currentUser = offlineUser;
+        showApp();
+        await loadUserData();
+        return;
+      }
+    }
     showAuthScreen();
   } finally {
     hideLoading();
@@ -534,6 +588,7 @@ async function initAuth() {
     if (event === 'SIGNED_IN' && session) {
       const isNewSignIn = !currentUser;
       currentUser = session.user;
+      saveOfflineUser(session.user);
       if (isNewSignIn) {
         showApp();
         await loadUserData();
@@ -541,6 +596,7 @@ async function initAuth() {
     } else if (event === 'SIGNED_OUT') {
       clearCachedData();
       clearPendingOps();
+      clearOfflineUser();
       currentUser = null;
       data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
       showAuthScreen();
