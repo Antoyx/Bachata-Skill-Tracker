@@ -1,17 +1,20 @@
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ===== THEME: Dark Rose (default) ===== */
 :root {
-  --bg:         #0f0f14;
-  --surface:    #1a1a24;
-  --surface2:   #22222f;
-  --border:     #2e2e3e;
-  --accent:     #c0436a;
-  --accent2:    #e8607e;
-  --text:       #f0eef5;
-  --text-muted: #8884a0;
-  --radius:     12px;
-  --radius-sm:  8px;
+  --bg:           #0f0f14;
+  --surface:      #1a1a24;
+  --surface2:     #22222f;
+  --border:       #2e2e3e;
+  --accent:       #c0436a;
+  --accent2:      #e8607e;
+  --text:         #f0eef5;
+  --text-muted:   #8884a0;
+  --header-grad:  linear-gradient(135deg, #1a0a12 0%, #1a1a24 100%);
+  --title-grad:   linear-gradient(135deg, #e8607e, #c0436a);
+  --radius:       12px;
+  --radius-sm:    8px;
 
   /* Proficiency colours */
   --l0: #3a3a4a;
@@ -20,6 +23,34 @@
   --l3: #f1c40f;
   --l4: #27ae60;
   --l5: #8e44ad;
+}
+
+/* ===== THEME: Midnight Ocean ===== */
+:root[data-theme="ocean"] {
+  --bg:          #080f1a;
+  --surface:     #0d1b2e;
+  --surface2:    #132540;
+  --border:      #1d3252;
+  --accent:      #0d7fc2;
+  --accent2:     #38bdf8;
+  --text:        #e4f1fb;
+  --text-muted:  #5e88a8;
+  --header-grad: linear-gradient(135deg, #04090f 0%, #0d1b2e 100%);
+  --title-grad:  linear-gradient(135deg, #38bdf8, #0d7fc2);
+}
+
+/* ===== THEME: Amber Dusk ===== */
+:root[data-theme="amber"] {
+  --bg:          #0d0b07;
+  --surface:     #191408;
+  --surface2:    #221c0c;
+  --border:      #332a12;
+  --accent:      #b87c10;
+  --accent2:     #f5a623;
+  --text:        #f5f0e8;
+  --text-muted:  #8a7a56;
+  --header-grad: linear-gradient(135deg, #080600 0%, #191408 100%);
+  --title-grad:  linear-gradient(135deg, #f5a623, #b87c10);
 }
 
 body {
@@ -31,7 +62,7 @@ body {
 
 /* ===== HEADER ===== */
 header {
-  background: linear-gradient(135deg, #1a0a12 0%, #1a1a24 100%);
+  background: var(--header-grad);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -63,7 +94,7 @@ header {
 h1 {
   font-size: 1.4rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #e8607e, #c0436a);
+  background: var(--title-grad);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -625,7 +656,7 @@ main {
 .auth-title {
   font-size: 1.2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #e8607e, #c0436a);
+  background: var(--title-grad);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -726,6 +757,31 @@ main {
   white-space: nowrap;
 }
 .logout-btn:hover { color: var(--text); border-color: #4a4a62; }
+
+/* ===== THEME SWITCHER ===== */
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.theme-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  padding: 0;
+  background-clip: padding-box;
+}
+.theme-dot:hover { transform: scale(1.2); }
+.theme-dot.active { border-color: var(--text); transform: scale(1.15); }
+
+.theme-dot[data-theme="rose"]  { background: #c0436a; }
+.theme-dot[data-theme="ocean"] { background: #0d7fc2; }
+.theme-dot[data-theme="amber"] { background: #b87c10; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 500px) {
