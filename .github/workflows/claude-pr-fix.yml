@@ -1,0 +1,51 @@
+name: Claude Code PR Fix
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  fix:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+          fetch-depth: 0
+
+      - name: Get PR branch name
+        id: pr-info
+        run: |
+          branch=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q '.headRefName')
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout writable branch
+        run: git checkout ${{ steps.pr-info.outputs.branch }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          claude_args: --dangerously-skip-permissions
+          prompt: |
+            You are fixing a bug reported in a pull request comment.
+
+            PR #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            Comment from @${{ github.event.comment.user.login }}:
+            ${{ github.event.comment.body }}
+
+            Read the current code carefully, understand the reported issue, fix it
+            following the project's conventions in CLAUDE.md, then push the changes
+            to the current branch and reply on the PR with a summary of what you changed.
