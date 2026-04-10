@@ -104,7 +104,7 @@ const DEFAULT_SKILLS = [
 // ===== APP STATE =====
 let currentUser = null;
 let data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
-let activeSection = 'moves';
+let activeSection = 'all';
 let activeFilter  = 'all';
 let activeSearch  = '';
 const expandedCards = {};
