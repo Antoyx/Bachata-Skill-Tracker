@@ -106,6 +106,7 @@ let currentUser = null;
 let data = { moves:[], combos:[], styling:[], footwork:[], isolations:[], intros:[] };
 let activeSection = 'moves';
 let activeFilter  = 'all';
+let activeSearch  = '';
 const expandedCards = {};
 
 // Skill modal state
@@ -610,6 +611,7 @@ function render() {
   SECTIONS.forEach(sec => renderSection(sec));
   renderProgressSummary();
   if (activeSection === 'focus') renderFocusSection();
+  else if (activeSection === 'all') renderAllSection();
 }
 
 function renderSection(section) {
@@ -626,11 +628,16 @@ function renderSection(section) {
   if (activeSection === section && activeFilter !== 'all') {
     items = items.filter(s => s.level === activeFilter);
   }
+  if (activeSection === section && activeSearch) {
+    const q = activeSearch.toLowerCase();
+    items = items.filter(s => s.name.toLowerCase().includes(q) || (s.notes || '').toLowerCase().includes(q));
+  }
 
   if (items.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'skill-empty';
-    empty.textContent = activeFilter === 'all' ? 'No entries yet — add your first one!' : 'No skills at this level.';
+    if (activeSearch) empty.textContent = 'No skills match your search.';
+    else empty.textContent = activeFilter === 'all' ? 'No entries yet — add your first one!' : 'No skills at this level.';
     listEl.appendChild(empty);
     return;
   }
@@ -645,7 +652,8 @@ function makeFilterBtn(label, value, section) {
   btn.addEventListener('click', () => {
     if (activeSection !== section) return;
     activeFilter = value;
-    renderSection(section);
+    if (section === 'all') renderAllSection();
+    else renderSection(section);
     document.querySelectorAll(`#${section}-list .filter-btn`).forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   });
@@ -681,6 +689,7 @@ function makeSkillCard(skill, section) {
   }
 
   const badges = document.createElement('div');
+  badges.className = 'skill-badges';
   badges.style.cssText = 'display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;flex-shrink:0;';
 
   const levelBadge = document.createElement('span');
@@ -947,22 +956,82 @@ function renderFocusSection() {
   });
 }
 
+// ===== ALL SECTION =====
+function renderAllSection() {
+  const listEl = document.getElementById('all-list');
+  listEl.innerHTML = '';
+
+  const filterRow = document.createElement('div');
+  filterRow.className = 'filter-row';
+  filterRow.appendChild(makeFilterBtn('All', 'all', 'all'));
+  for (let i = 0; i <= 5; i++) filterRow.appendChild(makeFilterBtn(LEVELS[i].short, i, 'all'));
+  listEl.appendChild(filterRow);
+
+  let allItems = [];
+  SECTIONS.forEach(sec => {
+    data[sec].forEach(skill => allItems.push({ skill, section: sec }));
+  });
+
+  if (activeFilter !== 'all') {
+    allItems = allItems.filter(({ skill }) => skill.level === activeFilter);
+  }
+  if (activeSearch) {
+    const q = activeSearch.toLowerCase();
+    allItems = allItems.filter(({ skill }) =>
+      skill.name.toLowerCase().includes(q) || (skill.notes || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (allItems.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'skill-empty';
+    empty.textContent = activeSearch || activeFilter !== 'all' ? 'No skills match your filter.' : 'No skills yet.';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  allItems.forEach(({ skill, section }) => {
+    const card = makeSkillCard(skill, section);
+    const badgesDiv = card.querySelector('.skill-badges');
+    if (badgesDiv) {
+      const sectionBadge = document.createElement('span');
+      sectionBadge.className = 'section-badge';
+      sectionBadge.textContent = SECTION_LABELS[section];
+      badgesDiv.insertBefore(sectionBadge, badgesDiv.firstChild);
+    }
+    listEl.appendChild(card);
+  });
+}
+
 // ===== NAVIGATION =====
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     activeSection = btn.dataset.section;
     activeFilter  = 'all';
+    activeSearch  = '';
+    document.querySelectorAll('.search-input').forEach(i => { i.value = ''; });
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.skill-section').forEach(s => s.classList.remove('active'));
     document.getElementById(activeSection).classList.add('active');
     if (activeSection === 'focus') renderFocusSection();
+    else if (activeSection === 'all') renderAllSection();
     else renderSection(activeSection);
   });
 });
 
 document.querySelectorAll('.add-btn').forEach(btn => {
   btn.addEventListener('click', () => openModal(btn.dataset.section, null));
+});
+
+// ===== SEARCH =====
+document.querySelectorAll('.search-input').forEach(input => {
+  input.addEventListener('input', e => {
+    activeSearch = e.target.value;
+    const sec = e.target.dataset.section;
+    if (sec === 'all') renderAllSection();
+    else renderSection(sec);
+  });
 });
 
 // ===== SKILL MODAL =====
