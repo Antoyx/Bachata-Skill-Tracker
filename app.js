@@ -762,6 +762,8 @@ function makeSkillCard(skill, section) {
 function makeVariationRow(variation, skillId, section) {
   const row = document.createElement('div');
   row.className = 'variation-row';
+  row.style.cursor = 'pointer';
+  row.addEventListener('click', () => openVarModal(section, skillId, variation.id));
 
   const nameEl = document.createElement('div');
   nameEl.className = 'var-info';
@@ -797,20 +799,13 @@ function makeVariationRow(variation, skillId, section) {
     catch (err) { alert('Failed: ' + err.message); }
   });
 
-  const editBtn = document.createElement('button');
-  editBtn.className = 'icon-btn';
-  editBtn.title = 'Edit';
-  editBtn.innerHTML = '&#9998;';
-  editBtn.addEventListener('click', () => openVarModal(section, skillId, variation.id));
-
   const delBtn = document.createElement('button');
   delBtn.className = 'icon-btn delete';
   delBtn.title = 'Delete';
   delBtn.innerHTML = '&#128465;';
-  delBtn.addEventListener('click', () => dbDeleteVariation(section, skillId, variation.id));
+  delBtn.addEventListener('click', e => { e.stopPropagation(); dbDeleteVariation(section, skillId, variation.id); });
 
   actions.appendChild(pinBtn);
-  actions.appendChild(editBtn);
   actions.appendChild(delBtn);
 
   row.appendChild(nameEl);
@@ -1071,6 +1066,22 @@ function closeModal() {
   editingId    = null;
 }
 
+async function saveAndCloseModal() {
+  const name = skillNameEl.value.trim();
+  if (!name) { closeModal(); return; }
+  const sec       = modalSection;
+  const id        = editingId;
+  const notes     = skillNotesEl.value.trim();
+  const lvl       = selectedLevel;
+  const diff      = id ? (data[sec].find(s => s.id === id)?.difficulty ?? 0) : 0;
+  const targetSec = skillSectionEl.value;
+  closeModal();
+  try {
+    if (id) await dbUpdateSkill(sec, id, name, notes, lvl, diff, targetSec);
+    else    await dbAddSkill(targetSec, name, notes, lvl, diff);
+  } catch (err) { alert('Save failed: ' + err.message); }
+}
+
 function updateLevelPicker() {
   levelPicker.querySelectorAll('.level-opt').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.level) === selectedLevel));
 }
@@ -1082,7 +1093,7 @@ levelPicker.addEventListener('click', e => {
   updateLevelPicker();
 });
 
-document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalClose').addEventListener('click', saveAndCloseModal);
 document.getElementById('modalCancel').addEventListener('click', closeModal);
 
 document.getElementById('modalSave').addEventListener('click', async () => {
@@ -1107,7 +1118,7 @@ document.getElementById('modalSave').addEventListener('click', async () => {
   } catch (err) { alert('Save failed: ' + err.message); }
 });
 
-modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) saveAndCloseModal(); });
 skillNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('modalSave').click(); });
 
 // ===== VARIATION MODAL =====
@@ -1150,6 +1161,22 @@ function closeVarModal() {
   varEditingId = null;
 }
 
+async function saveAndCloseVarModal() {
+  const name = varNameEl.value.trim();
+  if (!name) { closeVarModal(); return; }
+  const sec   = varSection;
+  const skId  = varSkillId;
+  const vId   = varEditingId;
+  const notes = varNotesEl.value.trim();
+  const lvl   = varLevel;
+  const diff  = vId ? (data[sec].find(s => s.id === skId)?.variations.find(v => v.id === vId)?.difficulty ?? 0) : 0;
+  closeVarModal();
+  try {
+    if (vId) await dbUpdateVariation(sec, skId, vId, name, notes, lvl, diff);
+    else     await dbAddVariation(sec, skId, name, notes, lvl, diff);
+  } catch (err) { alert('Save failed: ' + err.message); }
+}
+
 function updateVarLevelPicker() {
   varLevelPicker.querySelectorAll('.level-opt').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.level) === varLevel));
 }
@@ -1161,7 +1188,7 @@ varLevelPicker.addEventListener('click', e => {
   updateVarLevelPicker();
 });
 
-document.getElementById('varModalClose').addEventListener('click', closeVarModal);
+document.getElementById('varModalClose').addEventListener('click', saveAndCloseVarModal);
 document.getElementById('varModalCancel').addEventListener('click', closeVarModal);
 
 document.getElementById('varModalSave').addEventListener('click', async () => {
@@ -1185,7 +1212,7 @@ document.getElementById('varModalSave').addEventListener('click', async () => {
   } catch (err) { alert('Save failed: ' + err.message); }
 });
 
-varModalOverlay.addEventListener('click', e => { if (e.target === varModalOverlay) closeVarModal(); });
+varModalOverlay.addEventListener('click', e => { if (e.target === varModalOverlay) saveAndCloseVarModal(); });
 varNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('varModalSave').click(); });
 
 // ===== DELETE MODAL =====
