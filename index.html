@@ -64,6 +64,7 @@
       </div>
     </div>
     <nav>
+      <button class="nav-btn" data-section="all">All</button>
       <button class="nav-btn active" data-section="moves">Moves</button>
       <button class="nav-btn" data-section="combos">Combos</button>
       <button class="nav-btn" data-section="styling">Styling</button>
@@ -75,6 +76,20 @@
   </header>
 
   <main>
+    <!-- ALL -->
+    <section id="all" class="skill-section">
+      <div class="section-header">
+        <div>
+          <h2>All Skills</h2>
+          <p class="section-desc">Search and filter across all categories</p>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="all" placeholder="Search all skills…" />
+      </div>
+      <div class="skill-list" id="all-list"></div>
+    </section>
+
     <!-- MOVES -->
     <section id="moves" class="skill-section active">
       <div class="section-header">
@@ -83,6 +98,9 @@
           <p class="section-desc">Individual steps, turns, dips, and patterns</p>
         </div>
         <button class="add-btn" data-section="moves">+ Add Move</button>
+      </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="moves" placeholder="Search moves…" />
       </div>
       <div class="skill-list" id="moves-list"></div>
     </section>
@@ -96,6 +114,9 @@
         </div>
         <button class="add-btn" data-section="combos">+ Add Combo</button>
       </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="combos" placeholder="Search combos…" />
+      </div>
       <div class="skill-list" id="combos-list"></div>
     </section>
 
@@ -107,6 +128,9 @@
           <p class="section-desc">Arms, hands, head, and overall aesthetic</p>
         </div>
         <button class="add-btn" data-section="styling">+ Add Style</button>
+      </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="styling" placeholder="Search styling…" />
       </div>
       <div class="skill-list" id="styling-list"></div>
     </section>
@@ -120,6 +144,9 @@
         </div>
         <button class="add-btn" data-section="footwork">+ Add Footwork</button>
       </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="footwork" placeholder="Search footwork…" />
+      </div>
       <div class="skill-list" id="footwork-list"></div>
     </section>
 
@@ -132,6 +159,9 @@
         </div>
         <button class="add-btn" data-section="isolations">+ Add Isolation</button>
       </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="isolations" placeholder="Search body isolations…" />
+      </div>
       <div class="skill-list" id="isolations-list"></div>
     </section>
 
@@ -143,6 +173,9 @@
           <p class="section-desc">Opening sequences and first-impression moments</p>
         </div>
         <button class="add-btn" data-section="intros">+ Add Idea</button>
+      </div>
+      <div class="search-wrap">
+        <input type="search" class="search-input" data-section="intros" placeholder="Search intro ideas…" />
       </div>
       <div class="skill-list" id="intros-list"></div>
     </section>
