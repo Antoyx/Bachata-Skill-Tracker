@@ -54,3 +54,39 @@ Closes #[issue number]
 - [ ] Mobile (Android Chrome or iOS Safari)
 - [ ] Desktop browser
 ```
+
+## Design System
+
+All UI work MUST follow the style guide. Full specs: `.claude/skills/ui-style-guide/SKILL.md`
+
+### Colors
+```
+--color-dark:           #222222   /* backgrounds, primary text */
+--color-white:          #FFFFFF   /* surfaces, cards */
+--color-indigo:         #4B4E6D   /* secondary actions, depth */
+--color-mint:           #84DCC6   /* primary CTA, success, highlights */
+--color-grey:           #95A3B3   /* secondary text, borders, muted */
+--color-primary-hover:  #6FD4B8
+--color-primary-subtle: rgba(132,220,198,0.12)
+--color-surface:        #F8F9FA
+--color-border:         rgba(149,163,179,0.2)
+--color-danger:         #E5534B
+--color-warning:        #E5A93D
+```
+
+### Typography
+- **Headings:** Manrope (weights: 400–800) — import from Google Fonts
+- **Body:** Karla (weights: 300–500) — import from Google Fonts
+- Never use Inter, Roboto, Arial, or system-ui
+
+### Components
+- Border radius: `6px` on all interactive elements
+- Buttons: solid fill, Manrope 600, `all 0.2s ease` transition
+- Inputs: `1.5px solid rgba(149,163,179,0.25)`, Karla 400 14px, padding 12px 16px
+- Focus ring: `border-color: #84DCC6` + `box-shadow: 0 0 0 3px rgba(132,220,198,0.15)`
+
+### Spacing & Layout
+- Base unit: 8px — scale: 0, 4, 8, 16, 24, 32, 48, 64, 96
+- Grid: `repeat(auto-fit, minmax(280px, 1fr))` with 16px gap
+- Max container width: 1200px
+- Breakpoints: 640px (tablet), 1024px (desktop), 1440px (wide)
