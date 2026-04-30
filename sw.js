@@ -1,7 +1,7 @@
 'use strict';
 
-// IMPORTANT: Bump CACHE_NAME whenever app.js, style.css, or index.html changes
-const CACHE_NAME = 'bachata-shell-v1';
+// Bump CACHE_NAME whenever app.js, style.css, or index.html changes
+const CACHE_NAME = 'bachata-shell-v2';
 
 const PRECACHE_URLS = [
   '/',
