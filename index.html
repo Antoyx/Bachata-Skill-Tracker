@@ -14,6 +14,11 @@
 </head>
 <body>
 
+  <!-- UPDATE BANNER -->
+  <div class="update-banner hidden" id="updateBanner">
+    Updating to latest version…
+  </div>
+
   <!-- OFFLINE BANNER -->
   <div class="offline-banner hidden" id="offlineBanner">
     <span id="offlineBannerText">You're offline — changes saved locally</span>
@@ -278,8 +283,24 @@
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function(err) {
+      navigator.serviceWorker.register('/sw.js').then(function(reg) {
+        // Check for a new SW on every page load instead of waiting up to 24h
+        reg.update();
+
+        reg.addEventListener('updatefound', function() {
+          document.getElementById('updateBanner').classList.remove('hidden');
+        });
+      }).catch(function(err) {
         console.warn('SW registration failed:', err);
+      });
+
+      // When a new SW takes control, reload so users get the latest assets
+      var reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        if (!reloading) {
+          reloading = true;
+          window.location.reload();
+        }
       });
     }
   </script>

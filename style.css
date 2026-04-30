@@ -801,3 +801,24 @@ main {
   pointer-events: none;
 }
 .offline-banner.syncing { background: var(--accent); }
+
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 501;
+  background: var(--color-indigo, #4B4E6D);
+  color: #fff;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  letter-spacing: 0.01em;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.update-banner.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
