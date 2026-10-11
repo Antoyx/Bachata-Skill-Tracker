@@ -27,7 +27,8 @@ self.addEventListener('activate', event => {
   self.clients.claim(); // Control all open tabs immediately
 });
 
-// FETCH: cache-first for precached assets; bypass Supabase API calls entirely
+// FETCH: network-first for precached assets (fresh on every load, cache as offline fallback);
+// bypass Supabase API calls entirely
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
@@ -42,7 +43,15 @@ self.addEventListener('fetch', event => {
 
   if (isPrecached) {
     event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
+      fetch(event.request.url, { cache: 'no-cache' })
+        .then(response => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
   }
 });
