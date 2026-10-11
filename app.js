@@ -449,13 +449,18 @@ async function dbToggleVariationFocus(section, skillId, varId) {
 // ===== OFFLINE SYNC =====
 function collapsePendingOps(ops) {
   const deletedSkillIds = new Set(ops.filter(o => o.op === 'deleteSkill').map(o => o.payload.id));
-  const deletedVarIds = new Set(ops.filter(o => o.op === 'deleteVariation').map(o => o.payload.varId));
+  const deletedVarIds   = new Set(ops.filter(o => o.op === 'deleteVariation').map(o => o.payload.varId));
+  const addedSkillIds   = new Set(ops.filter(o => o.op === 'addSkill').map(o => o.payload.id));
+  const addedVarIds     = new Set(ops.filter(o => o.op === 'addVariation').map(o => o.payload.id));
 
+  // Created and deleted while offline: the server never saw it, so drop both ops
   ops = ops.filter(o => {
-    if (o.op === 'addSkill' && deletedSkillIds.has(o.payload.id)) return false;
-    if (o.op === 'addVariation' && deletedVarIds.has(o.payload.varId)) return false;
-    if (['updateSkill', 'toggleSkillFocus'].includes(o.op) && deletedSkillIds.has(o.payload.id)) return false;
-    if (['updateVariation', 'toggleVariationFocus'].includes(o.op) && deletedVarIds.has(o.payload.varId)) return false;
+    if (o.op === 'addSkill'        && deletedSkillIds.has(o.payload.id))  return false;
+    if (o.op === 'deleteSkill'     && addedSkillIds.has(o.payload.id))    return false;
+    if (o.op === 'addVariation'    && deletedVarIds.has(o.payload.id))    return false;
+    if (o.op === 'deleteVariation' && addedVarIds.has(o.payload.varId))   return false;
+    if (['updateSkill', 'toggleSkillFocus'].includes(o.op)         && deletedSkillIds.has(o.payload.id))    return false;
+    if (['updateVariation', 'toggleVariationFocus'].includes(o.op) && deletedVarIds.has(o.payload.varId))   return false;
     return true;
   });
 

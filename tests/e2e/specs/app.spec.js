@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript({ path: MOCK_PATH });
   await page.goto('/');
   // Auth overlay hidden = app initialised and data rendered
-  await page.waitForSelector('#authOverlay.hidden', { timeout: 10000 });
+  await page.waitForSelector('#authOverlay.hidden', { state: 'attached', timeout: 10000 });
 });
 
 // ── Auth ──────────────────────────────────────────────────────────────────

@@ -21,10 +21,15 @@ const DIFFICULTIES = [
 function collapsePendingOps(ops) {
   const deletedSkillIds = new Set(ops.filter(o => o.op === 'deleteSkill').map(o => o.payload.id));
   const deletedVarIds   = new Set(ops.filter(o => o.op === 'deleteVariation').map(o => o.payload.varId));
+  const addedSkillIds   = new Set(ops.filter(o => o.op === 'addSkill').map(o => o.payload.id));
+  const addedVarIds     = new Set(ops.filter(o => o.op === 'addVariation').map(o => o.payload.id));
 
+  // Created and deleted while offline: the server never saw it, so drop both ops
   ops = ops.filter(o => {
-    if (o.op === 'addSkill'     && deletedSkillIds.has(o.payload.id))    return false;
-    if (o.op === 'addVariation' && deletedVarIds.has(o.payload.varId))   return false;
+    if (o.op === 'addSkill'        && deletedSkillIds.has(o.payload.id))  return false;
+    if (o.op === 'deleteSkill'     && addedSkillIds.has(o.payload.id))    return false;
+    if (o.op === 'addVariation'    && deletedVarIds.has(o.payload.id))    return false;
+    if (o.op === 'deleteVariation' && addedVarIds.has(o.payload.varId))   return false;
     if (['updateSkill', 'toggleSkillFocus'].includes(o.op)         && deletedSkillIds.has(o.payload.id))    return false;
     if (['updateVariation', 'toggleVariationFocus'].includes(o.op) && deletedVarIds.has(o.payload.varId))   return false;
     return true;
@@ -151,6 +156,14 @@ QUnit.module('collapsePendingOps', () => {
   QUnit.test('removes addVariation when variation is later deleted', assert => {
     const ops = [
       { op: 'addVariation',    payload: { varId: 'v1', id: 'v1' } },
+      { op: 'deleteVariation', payload: { varId: 'v1' } },
+    ];
+    assert.deepEqual(collapsePendingOps(ops), []);
+  });
+
+  QUnit.test('removes addVariation when only payload.id is set (as app.js queues it)', assert => {
+    const ops = [
+      { op: 'addVariation',    payload: { id: 'v1', skill_id: 'a' } },
       { op: 'deleteVariation', payload: { varId: 'v1' } },
     ];
     assert.deepEqual(collapsePendingOps(ops), []);

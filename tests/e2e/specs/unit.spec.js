@@ -8,8 +8,8 @@ test('QUnit unit tests all pass', async ({ page }) => {
 
   // Wait for QUnit to finish running
   await page.waitForFunction(() => {
-    const el = document.getElementById('qunit-testresult');
-    return el && el.className.includes('complete');
+    const el = document.getElementById('qunit-testresult-display');
+    return el && el.textContent.includes('completed');
   }, { timeout: 10000 });
 
   const failed = await page.locator('#qunit-testresult .failed').textContent();
