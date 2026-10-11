@@ -82,3 +82,14 @@ test('Focus section shows only working_on skills', async ({ page }) => {
   await expect(page.locator('#focus-list .skill-card')).toHaveCount(1);
   await expect(page.locator('#focus-list')).toContainText('Arm Waves');
 });
+
+// ── Known section ─────────────────────────────────────────────────────────
+test('Known section groups Comfortable+ skills by category', async ({ page }) => {
+  await page.click('[data-section="known"]');
+  await page.waitForSelector('#known-list .skill-card');
+  await expect(page.locator('#known-list .known-group')).toHaveCount(2);
+  await expect(page.locator('#known-list .known-group-title')).toHaveText(['Moves1', 'Styling1']);
+  await expect(page.locator('#known-list')).toContainText('Cross Body Lead');
+  await expect(page.locator('#known-list')).toContainText('Arm Waves');
+  await expect(page.locator('#known-list')).not.toContainText('Basic Step');
+});

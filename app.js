@@ -611,6 +611,7 @@ function render() {
   SECTIONS.forEach(sec => renderSection(sec));
   renderProgressSummary();
   if (activeSection === 'focus') renderFocusSection();
+  else if (activeSection === 'known') renderKnownSection();
   else if (activeSection === 'all') renderAllSection();
 }
 
@@ -690,7 +691,6 @@ function makeSkillCard(skill, section) {
 
   const badges = document.createElement('div');
   badges.className = 'skill-badges';
-  badges.style.cssText = 'display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;flex-shrink:0;';
 
   const levelBadge = document.createElement('span');
   levelBadge.className = `skill-badge level-${skill.level}`;
@@ -853,6 +853,66 @@ const SECTION_LABELS = {
   footwork:'Footwork', isolations:'Body Isolations', intros:'Intro Ideas',
 };
 
+function makeEntryCard(entry, { showSection = true, actions = null } = {}) {
+  const isVar = !!entry.variation;
+  const item  = isVar ? entry.variation : entry.skill;
+  const card  = document.createElement('div');
+  card.className = 'skill-card';
+
+  const main = document.createElement('div');
+  main.className = 'skill-card-main';
+  main.style.cursor = 'pointer';
+  main.addEventListener('click', () => {
+    if (isVar) openVarModal(entry.section, entry.skill.id, item.id);
+    else       openModal(entry.section, item.id);
+  });
+
+  const bar = document.createElement('div');
+  bar.className = `skill-level-bar bar-${item.level}`;
+
+  const info = document.createElement('div');
+  info.className = 'skill-info';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'skill-name';
+  nameEl.textContent = item.name;
+  info.appendChild(nameEl);
+
+  if (isVar) {
+    const parentEl = document.createElement('div');
+    parentEl.className = 'skill-notes';
+    parentEl.textContent = `Variation of: ${entry.skill.name}`;
+    info.appendChild(parentEl);
+  } else if (item.notes) {
+    const notesEl = document.createElement('div');
+    notesEl.className = 'skill-notes';
+    notesEl.textContent = item.notes;
+    info.appendChild(notesEl);
+  }
+
+  const badges = document.createElement('div');
+  badges.className = 'skill-badges';
+
+  if (showSection) {
+    const sectionBadge = document.createElement('span');
+    sectionBadge.className = 'section-badge';
+    sectionBadge.textContent = SECTION_LABELS[entry.section];
+    badges.appendChild(sectionBadge);
+  }
+
+  const levelBadge = document.createElement('span');
+  levelBadge.className = `skill-badge level-${item.level}`;
+  levelBadge.textContent = LEVELS[item.level].short;
+  badges.appendChild(levelBadge);
+
+  main.appendChild(bar);
+  main.appendChild(info);
+  main.appendChild(badges);
+  if (actions) main.appendChild(actions);
+  card.appendChild(main);
+  return card;
+}
+
 function renderFocusSection() {
   const listEl = document.getElementById('focus-list');
   listEl.innerHTML = '';
@@ -879,52 +939,6 @@ function renderFocusSection() {
   [...focusedSkills, ...focusedVars].forEach(entry => {
     const isVar = !!entry.variation;
     const item  = isVar ? entry.variation : entry.skill;
-    const card  = document.createElement('div');
-    card.className = 'skill-card';
-
-    const main = document.createElement('div');
-    main.className = 'skill-card-main';
-    main.style.cursor = 'pointer';
-    main.addEventListener('click', () => {
-      if (isVar) openVarModal(entry.section, entry.skill.id, item.id);
-      else       openModal(entry.section, item.id);
-    });
-
-    const bar = document.createElement('div');
-    bar.className = `skill-level-bar bar-${item.level}`;
-
-    const info = document.createElement('div');
-    info.className = 'skill-info';
-
-    const nameEl = document.createElement('div');
-    nameEl.className = 'skill-name';
-    nameEl.textContent = item.name;
-    info.appendChild(nameEl);
-
-    if (isVar) {
-      const parentEl = document.createElement('div');
-      parentEl.className = 'skill-notes';
-      parentEl.textContent = `Variation of: ${entry.skill.name}`;
-      info.appendChild(parentEl);
-    } else if (item.notes) {
-      const notesEl = document.createElement('div');
-      notesEl.className = 'skill-notes';
-      notesEl.textContent = item.notes;
-      info.appendChild(notesEl);
-    }
-
-    const badges = document.createElement('div');
-    badges.style.cssText = 'display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;flex-shrink:0;';
-
-    const sectionBadge = document.createElement('span');
-    sectionBadge.className = 'section-badge';
-    sectionBadge.textContent = SECTION_LABELS[entry.section];
-    badges.appendChild(sectionBadge);
-
-    const levelBadge = document.createElement('span');
-    levelBadge.className = `skill-badge level-${item.level}`;
-    levelBadge.textContent = LEVELS[item.level].short;
-    badges.appendChild(levelBadge);
 
     const actions = document.createElement('div');
     actions.className = 'skill-actions';
@@ -942,13 +956,52 @@ function renderFocusSection() {
     });
     actions.appendChild(unpinBtn);
 
-    main.appendChild(bar);
-    main.appendChild(info);
-    main.appendChild(badges);
-    main.appendChild(actions);
-    card.appendChild(main);
-    listEl.appendChild(card);
+    listEl.appendChild(makeEntryCard(entry, { actions }));
   });
+}
+
+// ===== KNOWN SECTION =====
+const KNOWN_MIN_LEVEL = 3;
+
+function renderKnownSection() {
+  const listEl = document.getElementById('known-list');
+  listEl.innerHTML = '';
+
+  let total = 0;
+  SECTIONS.forEach(sec => {
+    const entries = [];
+    data[sec].forEach(skill => {
+      if (skill.level >= KNOWN_MIN_LEVEL) entries.push({ skill, section: sec });
+      (skill.variations || []).forEach(v => {
+        if (v.level >= KNOWN_MIN_LEVEL) entries.push({ variation: v, skill, section: sec });
+      });
+    });
+    if (entries.length === 0) return;
+    total += entries.length;
+
+    const group = document.createElement('div');
+    group.className = 'known-group';
+
+    const heading = document.createElement('h3');
+    heading.className = 'known-group-title';
+    heading.textContent = SECTION_LABELS[sec];
+
+    const count = document.createElement('span');
+    count.className = 'known-group-count';
+    count.textContent = entries.length;
+    heading.appendChild(count);
+    group.appendChild(heading);
+
+    entries.forEach(entry => group.appendChild(makeEntryCard(entry, { showSection: false })));
+    listEl.appendChild(group);
+  });
+
+  if (total === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'skill-empty';
+    empty.textContent = `Nothing here yet — skills appear once you rate them ${LEVELS[KNOWN_MIN_LEVEL].short} or higher.`;
+    listEl.appendChild(empty);
+  }
 }
 
 // ===== ALL SECTION =====
@@ -1010,6 +1063,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.skill-section').forEach(s => s.classList.remove('active'));
     document.getElementById(activeSection).classList.add('active');
     if (activeSection === 'focus') renderFocusSection();
+    else if (activeSection === 'known') renderKnownSection();
     else if (activeSection === 'all') renderAllSection();
     else renderSection(activeSection);
   });

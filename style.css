@@ -240,6 +240,41 @@ main {
   flex-shrink: 0;
 }
 
+.skill-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+/* ===== KNOWN SECTION ===== */
+.known-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.known-group + .known-group { margin-top: 1.25rem; }
+
+.known-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.known-group-count {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
 .skill-actions {
   display: flex;
   gap: 0.4rem;
