@@ -124,6 +124,7 @@ let varNotes     = '';
 // Delete state
 let deleteSection = null;
 let deleteId      = null;
+let deleteVarId   = null;
 
 // ===== OFFLINE / SYNC STATE =====
 let isOnline = navigator.onLine;
@@ -661,14 +662,32 @@ function makeFilterBtn(label, value, section) {
   return btn;
 }
 
-function makeSkillCard(skill, section) {
+function makeSkillMeta(item, sectionLabel) {
+  const meta = document.createElement('div');
+  meta.className = 'skill-meta';
+
+  const levelEl = document.createElement('span');
+  levelEl.className = `skill-meta-level level-text-${item.level}`;
+  levelEl.textContent = LEVELS[item.level].short;
+  meta.appendChild(levelEl);
+
+  const parts = [DIFFICULTIES[item.difficulty ?? 0].short];
+  if (sectionLabel) parts.push(sectionLabel);
+  parts.forEach(text => {
+    const el = document.createElement('span');
+    el.textContent = text;
+    meta.appendChild(el);
+  });
+  return meta;
+}
+
+function makeSkillCard(skill, section, { showSection = false } = {}) {
   const card = document.createElement('div');
   card.className = 'skill-card';
   card.setAttribute('data-id', skill.id);
 
   const main = document.createElement('div');
   main.className = 'skill-card-main';
-  main.style.cursor = 'pointer';
   main.addEventListener('click', () => openModal(section, skill.id));
 
   const bar = document.createElement('div');
@@ -681,6 +700,7 @@ function makeSkillCard(skill, section) {
   nameEl.className = 'skill-name';
   nameEl.textContent = skill.name;
   info.appendChild(nameEl);
+  info.appendChild(makeSkillMeta(skill, showSection ? SECTION_LABELS[section] : null));
 
   if (skill.notes) {
     const notesEl = document.createElement('div');
@@ -691,6 +711,13 @@ function makeSkillCard(skill, section) {
 
   const badges = document.createElement('div');
   badges.className = 'skill-badges';
+
+  if (showSection) {
+    const sectionBadge = document.createElement('span');
+    sectionBadge.className = 'section-badge';
+    sectionBadge.textContent = SECTION_LABELS[section];
+    badges.appendChild(sectionBadge);
+  }
 
   const levelBadge = document.createElement('span');
   levelBadge.className = `skill-badge level-${skill.level}`;
@@ -762,7 +789,6 @@ function makeSkillCard(skill, section) {
 function makeVariationRow(variation, skillId, section) {
   const row = document.createElement('div');
   row.className = 'variation-row';
-  row.style.cursor = 'pointer';
   row.addEventListener('click', () => openVarModal(section, skillId, variation.id));
 
   const nameEl = document.createElement('div');
@@ -772,18 +798,17 @@ function makeVariationRow(variation, skillId, section) {
   varNameSpan.className = 'var-name';
   varNameSpan.textContent = variation.name;
   nameEl.appendChild(varNameSpan);
+  nameEl.appendChild(makeSkillMeta(variation, null));
 
   if (variation.notes) {
     const varNotesSpan = document.createElement('span');
-    varNotesSpan.className = 'skill-notes';
-    varNotesSpan.style.fontSize = '0.75rem';
+    varNotesSpan.className = 'skill-notes var-notes';
     varNotesSpan.textContent = variation.notes;
     nameEl.appendChild(varNotesSpan);
   }
 
   const badge = document.createElement('span');
-  badge.className = `skill-badge level-${variation.level}`;
-  badge.style.fontSize = '0.65rem';
+  badge.className = `skill-badge var-badge level-${variation.level}`;
   badge.textContent = LEVELS[variation.level].short;
 
   const actions = document.createElement('div');
@@ -803,7 +828,7 @@ function makeVariationRow(variation, skillId, section) {
   delBtn.className = 'icon-btn delete';
   delBtn.title = 'Delete';
   delBtn.innerHTML = '&#128465;';
-  delBtn.addEventListener('click', e => { e.stopPropagation(); dbDeleteVariation(section, skillId, variation.id); });
+  delBtn.addEventListener('click', e => { e.stopPropagation(); openDeleteModal(section, skillId, variation.id); });
 
   actions.appendChild(pinBtn);
   actions.appendChild(delBtn);
@@ -861,7 +886,6 @@ function makeEntryCard(entry, { showSection = true, actions = null } = {}) {
 
   const main = document.createElement('div');
   main.className = 'skill-card-main';
-  main.style.cursor = 'pointer';
   main.addEventListener('click', () => {
     if (isVar) openVarModal(entry.section, entry.skill.id, item.id);
     else       openModal(entry.section, item.id);
@@ -877,10 +901,11 @@ function makeEntryCard(entry, { showSection = true, actions = null } = {}) {
   nameEl.className = 'skill-name';
   nameEl.textContent = item.name;
   info.appendChild(nameEl);
+  info.appendChild(makeSkillMeta(item, showSection ? SECTION_LABELS[entry.section] : null));
 
   if (isVar) {
     const parentEl = document.createElement('div');
-    parentEl.className = 'skill-notes';
+    parentEl.className = 'skill-notes skill-parent';
     parentEl.textContent = `Variation of: ${entry.skill.name}`;
     info.appendChild(parentEl);
   } else if (item.notes) {
@@ -1039,15 +1064,7 @@ function renderAllSection() {
   }
 
   allItems.forEach(({ skill, section }) => {
-    const card = makeSkillCard(skill, section);
-    const badgesDiv = card.querySelector('.skill-badges');
-    if (badgesDiv) {
-      const sectionBadge = document.createElement('span');
-      sectionBadge.className = 'section-badge';
-      sectionBadge.textContent = SECTION_LABELS[section];
-      badgesDiv.insertBefore(sectionBadge, badgesDiv.firstChild);
-    }
-    listEl.appendChild(card);
+    listEl.appendChild(makeSkillCard(skill, section, { showSection: true }));
   });
 }
 
@@ -1090,6 +1107,7 @@ const skillNameEl    = document.getElementById('skillName');
 const skillNotesEl   = document.getElementById('skillNotes');
 const skillSectionEl = document.getElementById('skillSection');
 const levelPicker = document.getElementById('levelPicker');
+const modalDeleteBtn = document.getElementById('modalDelete');
 
 function openModal(section, id) {
   modalSection  = section;
@@ -1109,6 +1127,7 @@ function openModal(section, id) {
     skillNotesEl.value = '';
   }
 
+  modalDeleteBtn.hidden = !id;
   updateLevelPicker();
   modalOverlay.classList.add('open');
   setTimeout(() => skillNameEl.focus(), 50);
@@ -1150,6 +1169,12 @@ async function saveAndCloseModal() {
 document.getElementById('modalClose').addEventListener('click', saveAndCloseModal);
 document.getElementById('modalCancel').addEventListener('click', closeModal);
 document.getElementById('modalSave').addEventListener('click', saveAndCloseModal);
+modalDeleteBtn.addEventListener('click', () => {
+  const sec = modalSection;
+  const id  = editingId;
+  closeModal();
+  openDeleteModal(sec, id);
+});
 
 modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) saveAndCloseModal(); });
 skillNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') saveAndCloseModal(); });
@@ -1160,6 +1185,7 @@ const varModalTitle   = document.getElementById('varModalTitle');
 const varNameEl       = document.getElementById('varName');
 const varNotesEl     = document.getElementById('varNotes');
 const varLevelPicker = document.getElementById('varLevelPicker');
+const varModalDeleteBtn = document.getElementById('varModalDelete');
 
 function openVarModal(section, skillId, variationId) {
   varSection   = section;
@@ -1182,6 +1208,7 @@ function openVarModal(section, skillId, variationId) {
     varNotesEl.value = '';
   }
 
+  varModalDeleteBtn.hidden = !variationId;
   updateVarLevelPicker();
   varModalOverlay.classList.add('open');
   setTimeout(() => varNameEl.focus(), 50);
@@ -1224,6 +1251,13 @@ async function saveAndCloseVarModal() {
 document.getElementById('varModalClose').addEventListener('click', saveAndCloseVarModal);
 document.getElementById('varModalCancel').addEventListener('click', closeVarModal);
 document.getElementById('varModalSave').addEventListener('click', saveAndCloseVarModal);
+varModalDeleteBtn.addEventListener('click', () => {
+  const sec  = varSection;
+  const skId = varSkillId;
+  const vId  = varEditingId;
+  closeVarModal();
+  openDeleteModal(sec, skId, vId);
+});
 
 varModalOverlay.addEventListener('click', e => { if (e.target === varModalOverlay) saveAndCloseVarModal(); });
 varNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') saveAndCloseVarModal(); });
@@ -1231,11 +1265,15 @@ varNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') saveAndClose
 // ===== DELETE MODAL =====
 const deleteOverlay   = document.getElementById('deleteOverlay');
 const deleteSkillName = document.getElementById('deleteSkillName');
+const deleteTitle     = document.getElementById('deleteTitle');
 
-function openDeleteModal(section, id) {
+function openDeleteModal(section, id, varId = null) {
   deleteSection = section;
   deleteId      = id;
-  deleteSkillName.textContent = data[section].find(s => s.id === id).name;
+  deleteVarId   = varId;
+  const skill = data[section].find(s => s.id === id);
+  deleteTitle.textContent     = varId ? 'Delete Variation?' : 'Delete Skill?';
+  deleteSkillName.textContent = varId ? skill.variations.find(v => v.id === varId).name : skill.name;
   deleteOverlay.classList.add('open');
 }
 
@@ -1243,16 +1281,21 @@ function closeDeleteModal() {
   deleteOverlay.classList.remove('open');
   deleteSection = null;
   deleteId      = null;
+  deleteVarId   = null;
 }
 
 document.getElementById('deleteClose').addEventListener('click', closeDeleteModal);
 document.getElementById('deleteCancelBtn').addEventListener('click', closeDeleteModal);
 
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
-  const sec = deleteSection;
-  const id  = deleteId;
+  const sec   = deleteSection;
+  const id    = deleteId;
+  const varId = deleteVarId;
   closeDeleteModal();
-  try { await dbDeleteSkill(sec, id); }
+  try {
+    if (varId) await dbDeleteVariation(sec, id, varId);
+    else       await dbDeleteSkill(sec, id);
+  }
   catch (err) { alert('Delete failed: ' + err.message); }
 });
 
