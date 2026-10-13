@@ -248,15 +248,15 @@ main {
   flex-shrink: 0;
 }
 
-/* ===== KNOWN SECTION ===== */
-.known-group {
+/* ===== GROUPED ENTRIES (Focus, Known) ===== */
+.entry-group {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
 }
-.known-group + .known-group { margin-top: 1.25rem; }
+.entry-group + .entry-group { margin-top: 1.25rem; }
 
-.known-group-title {
+.entry-group-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -267,7 +267,7 @@ main {
   color: var(--text-muted);
 }
 
-.known-group-count {
+.entry-group-count {
   font-size: 0.7rem;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;

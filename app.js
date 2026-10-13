@@ -913,95 +913,88 @@ function makeEntryCard(entry, { showSection = true, actions = null } = {}) {
   return card;
 }
 
-function renderFocusSection() {
-  const listEl = document.getElementById('focus-list');
-  listEl.innerHTML = '';
-
-  const focusedSkills = [];
-  const focusedVars   = [];
-  SECTIONS.forEach(sec => {
-    data[sec].forEach(skill => {
-      if (skill.working_on) focusedSkills.push({ skill, section: sec });
-      (skill.variations || []).forEach(v => {
-        if (v.working_on) focusedVars.push({ variation: v, skill, section: sec });
-      });
-    });
-  });
-
-  if (focusedSkills.length === 0 && focusedVars.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'skill-empty';
-    empty.textContent = 'No items in focus yet — pin skills or variations with the 📌 button.';
-    listEl.appendChild(empty);
-    return;
-  }
-
-  [...focusedSkills, ...focusedVars].forEach(entry => {
-    const isVar = !!entry.variation;
-    const item  = isVar ? entry.variation : entry.skill;
-
-    const actions = document.createElement('div');
-    actions.className = 'skill-actions';
-
-    const unpinBtn = document.createElement('button');
-    unpinBtn.className = 'icon-btn pin active';
-    unpinBtn.title = 'Remove from Focus';
-    unpinBtn.innerHTML = '&#128204;';
-    unpinBtn.addEventListener('click', async e => {
-      e.stopPropagation();
-      try {
-        if (isVar) await dbToggleVariationFocus(entry.section, entry.skill.id, item.id);
-        else       await dbToggleSkillFocus(entry.section, item.id);
-      } catch (err) { alert('Failed: ' + err.message); }
-    });
-    actions.appendChild(unpinBtn);
-
-    listEl.appendChild(makeEntryCard(entry, { actions }));
-  });
-}
-
-// ===== KNOWN SECTION =====
-const KNOWN_MIN_LEVEL = 3;
-
-function renderKnownSection() {
-  const listEl = document.getElementById('known-list');
+function renderGroupedEntries(listEl, includeItem, makeCard, emptyText) {
   listEl.innerHTML = '';
 
   let total = 0;
   SECTIONS.forEach(sec => {
     const entries = [];
     data[sec].forEach(skill => {
-      if (skill.level >= KNOWN_MIN_LEVEL) entries.push({ skill, section: sec });
+      if (includeItem(skill)) entries.push({ skill, section: sec });
       (skill.variations || []).forEach(v => {
-        if (v.level >= KNOWN_MIN_LEVEL) entries.push({ variation: v, skill, section: sec });
+        if (includeItem(v)) entries.push({ variation: v, skill, section: sec });
       });
     });
     if (entries.length === 0) return;
     total += entries.length;
 
     const group = document.createElement('div');
-    group.className = 'known-group';
+    group.className = 'entry-group';
 
     const heading = document.createElement('h3');
-    heading.className = 'known-group-title';
+    heading.className = 'entry-group-title';
     heading.textContent = SECTION_LABELS[sec];
 
     const count = document.createElement('span');
-    count.className = 'known-group-count';
+    count.className = 'entry-group-count';
     count.textContent = entries.length;
     heading.appendChild(count);
     group.appendChild(heading);
 
-    entries.forEach(entry => group.appendChild(makeEntryCard(entry, { showSection: false })));
+    entries.forEach(entry => group.appendChild(makeCard(entry)));
     listEl.appendChild(group);
   });
 
   if (total === 0) {
     const empty = document.createElement('div');
     empty.className = 'skill-empty';
-    empty.textContent = `Nothing here yet — skills appear once you rate them ${LEVELS[KNOWN_MIN_LEVEL].short} or higher.`;
+    empty.textContent = emptyText;
     listEl.appendChild(empty);
   }
+}
+
+function makeFocusCard(entry) {
+  const isVar = !!entry.variation;
+  const item  = isVar ? entry.variation : entry.skill;
+
+  const actions = document.createElement('div');
+  actions.className = 'skill-actions';
+
+  const unpinBtn = document.createElement('button');
+  unpinBtn.className = 'icon-btn pin active';
+  unpinBtn.title = 'Remove from Focus';
+  unpinBtn.innerHTML = '&#128204;';
+  unpinBtn.addEventListener('click', async e => {
+    e.stopPropagation();
+    try {
+      if (isVar) await dbToggleVariationFocus(entry.section, entry.skill.id, item.id);
+      else       await dbToggleSkillFocus(entry.section, item.id);
+    } catch (err) { alert('Failed: ' + err.message); }
+  });
+  actions.appendChild(unpinBtn);
+
+  return makeEntryCard(entry, { showSection: false, actions });
+}
+
+function renderFocusSection() {
+  renderGroupedEntries(
+    document.getElementById('focus-list'),
+    item => item.working_on,
+    makeFocusCard,
+    'No items in focus yet — pin skills or variations with the 📌 button.'
+  );
+}
+
+// ===== KNOWN SECTION =====
+const KNOWN_MIN_LEVEL = 3;
+
+function renderKnownSection() {
+  renderGroupedEntries(
+    document.getElementById('known-list'),
+    item => item.level >= KNOWN_MIN_LEVEL,
+    entry => makeEntryCard(entry, { showSection: false }),
+    `Nothing here yet — skills appear once you rate them ${LEVELS[KNOWN_MIN_LEVEL].short} or higher.`
+  );
 }
 
 // ===== ALL SECTION =====
