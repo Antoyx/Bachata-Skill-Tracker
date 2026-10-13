@@ -770,7 +770,8 @@ function makeSkillCard(skill, section, { showSection = false } = {}) {
   toggle.innerHTML = `<i class="var-arrow">▶</i> ${vars.length > 0 ? `${vars.length} variation${vars.length !== 1 ? 's' : ''}` : 'Variations'}`;
   toggle.addEventListener('click', () => {
     expandedCards[skill.id] = !expandedCards[skill.id];
-    renderSection(section);
+    if (activeSection === 'all') renderAllSection();
+    else renderSection(section);
   });
 
   const varList = document.createElement('div');
