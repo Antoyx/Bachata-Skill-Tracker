@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bachata Tracker — Design System</title>
+  <style>
+    /* ===== TOKENS (mirrored from style.css) ===== */
+    :root {
+      --bg:           #0f0f14;
+      --surface:      #1a1a24;
+      --surface2:     #22222f;
+      --border:       #2e2e3e;
+      --accent:       #c0436a;
+      --accent2:      #e8607e;
+      --text:         #f0eef5;
+      --text-muted:   #8884a0;
+      --header-grad:  linear-gradient(135deg, #1a0a12 0%, #1a1a24 100%);
+      --title-grad:   linear-gradient(135deg, #e8607e, #c0436a);
+      --radius:       12px;
+      --radius-sm:    8px;
+
+      --l0: #3a3a4a;
+      --l1: #c0392b;
+      --l2: #e67e22;
+      --l3: #f1c40f;
+      --l4: #27ae60;
+      --l5: #8e44ad;
+    }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== DS LAYOUT ===== */
+    .ds-page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 6rem;
+    }
+
+    .ds-hero {
+      padding: 2.5rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+
+    .ds-hero h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--title-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.4rem;
+    }
+
+    .ds-hero p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .ds-section {
+      margin-bottom: 3.5rem;
+    }
+
+    .ds-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .ds-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+
+    .ds-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .ds-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      letter-spacing: 0.03em;
+    }
+
+    .ds-swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .ds-swatch {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .ds-swatch-color {
+      height: 56px;
+    }
+
+    .ds-swatch-meta {
+      background: var(--surface);
+      padding: 0.5rem 0.65rem;
+    }
+
+    .ds-swatch-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .ds-swatch-value {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-family: monospace;
+      margin-top: 0.15rem;
+    }
+
+    /* ===== MIRRORED STYLES FROM style.css ===== */
+
+    /* Buttons */
+    .add-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .add-btn:hover { background: var(--accent2); }
+    .add-btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.3rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: var(--accent2); }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { background: var(--border); color: var(--text); }
+
+    .btn-danger {
+      background: var(--l1);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.3rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-danger:hover { opacity: 0.85; }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface2); color: var(--text); border-color: #4a4a62; }
+    .icon-btn.delete:hover { background: rgba(192,67,106,0.15); color: var(--accent2); border-color: var(--accent); }
+    .icon-btn.pin.active { color: #f0b429; border-color: rgba(183,119,13,0.5); background: rgba(183,119,13,0.12); }
+
+    /* Nav buttons */
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.65rem 1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .nav-btn:hover { color: var(--text); }
+    .nav-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+
+    /* Badges & pills */
+    .skill-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .section-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .prog-pill {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .filter-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { color: var(--text); border-color: #4a4a62; }
+    .filter-btn.active { border-color: var(--accent); color: var(--accent2); background: rgba(192, 67, 106, 0.1); }
+
+    /* Level colours */
+    .level-0 { background: var(--l0); color: #fff; }
+    .level-1 { background: var(--l1); color: #fff; }
+    .level-2 { background: var(--l2); color: #fff; }
+    .level-3 { background: var(--l3); color: #1a1a00; }
+    .level-4 { background: var(--l4); color: #fff; }
+    .level-5 { background: var(--l5); color: #fff; }
+
+    .bar-0 { background: var(--l0); }
+    .bar-1 { background: var(--l1); }
+    .bar-2 { background: var(--l2); }
+    .bar-3 { background: var(--l3); }
+    .bar-4 { background: var(--l4); }
+    .bar-5 { background: var(--l5); }
+
+    /* Skill card */
+    .skill-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .skill-card:hover { background: var(--surface2); border-color: #3e3e52; }
+
+    .skill-card-main {
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .skill-level-bar {
+      width: 5px;
+      flex-shrink: 0;
+      border-radius: 3px;
+      align-self: stretch;
+      min-height: 40px;
+    }
+
+    .skill-info { flex: 1; min-width: 0; }
+
+    .skill-name {
+      font-size: 0.97rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .skill-notes {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .skill-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    .variations-section { border-top: 1px solid var(--border); }
+
+    .variations-toggle {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.45rem 1.1rem;
+      width: 100%;
+      text-align: left;
+      transition: color 0.15s, background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .variations-toggle:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+    .variations-list {
+      display: flex;
+      flex-direction: column;
+      padding: 0 1.1rem 0.6rem;
+      gap: 0.35rem;
+    }
+
+    .variation-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.65rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .var-info { flex: 1; min-width: 0; }
+    .var-name { font-size: 0.85rem; font-weight: 500; }
+    .var-actions { display: flex; gap: 0.3rem; }
+    .var-actions .icon-btn { width: 26px; height: 26px; font-size: 0.75rem; }
+
+    .add-var-btn {
+      background: none;
+      border: 1px dashed var(--border);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, color 0.15s;
+      margin-top: 0.1rem;
+    }
+    .add-var-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+    /* Inputs */
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-field label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .form-field input,
+    .form-field textarea,
+    .form-field select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      width: 100%;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    .form-field input:focus,
+    .form-field textarea:focus,
+    .form-field select:focus { outline: none; border-color: var(--accent); }
+    .form-field input::placeholder,
+    .form-field textarea::placeholder { color: var(--text-muted); }
+    .form-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23a09ab8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      background-color: var(--bg);
+      padding-right: 2.25rem;
+      cursor: pointer;
+    }
+
+    .search-wrap { position: relative; }
+    .search-wrap::before {
+      content: '🔍';
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.8rem;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    .search-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.9rem 0.55rem 2.2rem;
+      font-size: 0.88rem;
+      font-family: inherit;
+      width: 100%;
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); background: var(--bg); }
+    .search-input::placeholder { color: var(--text-muted); }
+
+    /* Level picker */
+    .level-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    .level-opt {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.5rem 0.4rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .level-opt:hover { border-color: #4a4a62; color: var(--text); }
+    .level-opt.selected { color: #fff; border-color: transparent; }
+    .level-opt[data-level="0"].selected { background: var(--l0); }
+    .level-opt[data-level="1"].selected { background: var(--l1); }
+    .level-opt[data-level="2"].selected { background: var(--l2); }
+    .level-opt[data-level="3"].selected { background: var(--l3); color: #1a1a00; }
+    .level-opt[data-level="4"].selected { background: var(--l4); }
+    .level-opt[data-level="5"].selected { background: var(--l5); }
+
+    /* Modal */
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+    .modal-sm { max-width: 360px; }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 1.3rem; cursor: pointer; line-height: 1;
+      padding: 0.1rem 0.3rem; border-radius: 4px;
+    }
+    .modal-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .modal-body label {
+      font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: -0.5rem;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Auth card */
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+    .auth-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: var(--title-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .auth-tabs {
+      display: flex;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 0.2rem;
+      gap: 0.2rem;
+    }
+    .auth-tab {
+      flex: 1; background: none; border: none; color: var(--text-muted);
+      padding: 0.5rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .auth-tab.active { background: var(--surface); color: var(--text); }
+    .auth-card input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      width: 100%;
+    }
+    .auth-error { font-size: 0.8rem; color: #e74c3c; text-align: center; }
+    .auth-submit { width: 100%; padding: 0.75rem; font-size: 0.9rem; }
+
+    /* Loading */
+    .loading-spinner {
+      width: 42px; height: 42px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Offline banner */
+    .offline-banner {
+      background: #b87c10;
+      color: #fff;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      letter-spacing: 0.01em;
+      border-radius: var(--radius-sm);
+    }
+    .offline-banner.syncing { background: var(--accent); }
+
+    /* Logout btn */
+    .logout-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.3rem 0.7rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .logout-btn:hover { color: var(--text); border-color: #4a4a62; }
+
+    /* ===== DS-specific helpers ===== */
+    .ds-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .ds-type-scale dt {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .ds-type-scale dd { margin-bottom: 1.25rem; }
+
+    .required { color: var(--accent2); }
+    .optional { font-weight: 400; font-style: italic; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+
+    .ds-spacing-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .ds-space-block {
+      background: rgba(192,67,106,0.2);
+      border: 1px solid rgba(192,67,106,0.4);
+      border-radius: 3px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 4px;
+      font-size: 0.65rem;
+      color: var(--accent2);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="ds-page">
+
+  <!-- HERO -->
+  <div class="ds-hero">
+    <h1>&#127926; Bachata Tracker</h1>
+    <p>Design System — tokens, components, and patterns</p>
+  </div>
+
+  <!-- COLORS -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Color Tokens</h2>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Backgrounds &amp; surfaces</p>
+    <div class="ds-swatch-grid" style="margin-bottom:1.5rem;">
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#0f0f14;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--bg</div>
+          <div class="ds-swatch-value">#0f0f14</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#1a1a24;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--surface</div>
+          <div class="ds-swatch-value">#1a1a24</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#22222f;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--surface2</div>
+          <div class="ds-swatch-value">#22222f</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#2e2e3e;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--border</div>
+          <div class="ds-swatch-value">#2e2e3e</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Accent</p>
+    <div class="ds-swatch-grid" style="margin-bottom:1.5rem;">
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#c0436a;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--accent</div>
+          <div class="ds-swatch-value">#c0436a</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#e8607e;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--accent2</div>
+          <div class="ds-swatch-value">#e8607e (hover)</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Text</p>
+    <div class="ds-swatch-grid" style="margin-bottom:1.5rem;">
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#f0eef5;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--text</div>
+          <div class="ds-swatch-value">#f0eef5</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#8884a0;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--text-muted</div>
+          <div class="ds-swatch-value">#8884a0</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Proficiency levels</p>
+    <div class="ds-swatch-grid">
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#3a3a4a;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--l0 · Not Started</div>
+          <div class="ds-swatch-value">#3a3a4a</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#c0392b;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--l1 · Learning</div>
+          <div class="ds-swatch-value">#c0392b</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#e67e22;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--l2 · Developing</div>
+          <div class="ds-swatch-value">#e67e22</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#f1c40f;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--l3 · Comfortable</div>
+          <div class="ds-swatch-value">#f1c40f</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#27ae60;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--l4 · Solid</div>
+          <div class="ds-swatch-value">#27ae60</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:#8e44ad;"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--l5 · Mastered</div>
+          <div class="ds-swatch-value">#8e44ad</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPOGRAPHY -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Typography</h2>
+    <div class="ds-card">
+      <dl class="ds-type-scale">
+        <dt>Page title · 2rem / 800</dt>
+        <dd>
+          <h1 style="font-size:2rem;font-weight:800;background:var(--title-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+            Bachata Tracker
+          </h1>
+        </dd>
+
+        <dt>Section heading · 1.3rem / 700</dt>
+        <dd><h2 style="font-size:1.3rem;font-weight:700;">Moves</h2></dd>
+
+        <dt>Modal heading · 1rem / 700</dt>
+        <dd><h3 style="font-size:1rem;font-weight:700;">Add Skill</h3></dd>
+
+        <dt>Skill name · 0.97rem / 600</dt>
+        <dd><span class="skill-name">Body Roll with Exit</span></dd>
+
+        <dt>Body / notes · 0.9rem / 400</dt>
+        <dd><span style="font-size:0.9rem;">Keep the chest leading; arms follow through</span></dd>
+
+        <dt>Muted / meta · 0.8rem</dt>
+        <dd><span class="skill-notes">Focus on ribcage isolation first</span></dd>
+
+        <dt>Label (uppercase) · 0.82rem / 600</dt>
+        <dd>
+          <span style="font-size:0.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">
+            Proficiency <span class="required">*</span>
+          </span>
+        </dd>
+
+        <dt>Micro / badge · 0.7–0.72rem / 600–700</dt>
+        <dd style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+          <span class="skill-badge level-4">Solid</span>
+          <span class="section-badge">Moves</span>
+          <span class="prog-pill level-5">5 Mastered</span>
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- SPACING -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Spacing Scale (8px base)</h2>
+    <div class="ds-card">
+      <div class="ds-spacing-row">
+        <div>
+          <div class="ds-space-block" style="width:4px;height:4px;padding:0;"></div>
+          <div class="ds-label">4px</div>
+        </div>
+        <div>
+          <div class="ds-space-block" style="width:8px;height:8px;padding:0;"></div>
+          <div class="ds-label">8px</div>
+        </div>
+        <div>
+          <div class="ds-space-block" style="width:16px;height:16px;padding:0;"></div>
+          <div class="ds-label">16px</div>
+        </div>
+        <div>
+          <div class="ds-space-block" style="width:24px;height:24px;padding:0;"></div>
+          <div class="ds-label">24px</div>
+        </div>
+        <div>
+          <div class="ds-space-block" style="width:32px;height:32px;padding:0;"></div>
+          <div class="ds-label">32px</div>
+        </div>
+        <div>
+          <div class="ds-space-block" style="width:48px;height:48px;padding:0;"></div>
+          <div class="ds-label">48px</div>
+        </div>
+        <div>
+          <div class="ds-space-block" style="width:64px;height:64px;padding:0;"></div>
+          <div class="ds-label">64px</div>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-top:1rem;">
+        Border radius: <code style="color:var(--accent2);">--radius: 12px</code> (cards, modals) &nbsp;·&nbsp;
+        <code style="color:var(--accent2);">--radius-sm: 8px</code> (buttons, inputs, badges)
+      </p>
+    </div>
+  </section>
+
+  <!-- BUTTONS -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Buttons</h2>
+
+    <div class="ds-row" style="margin-bottom:0.5rem;">
+      <div>
+        <button class="btn-primary">Save</button>
+        <div class="ds-label">.btn-primary</div>
+      </div>
+      <div>
+        <button class="btn-secondary">Cancel</button>
+        <div class="ds-label">.btn-secondary</div>
+      </div>
+      <div>
+        <button class="btn-danger">Delete</button>
+        <div class="ds-label">.btn-danger</div>
+      </div>
+      <div>
+        <button class="add-btn">+ Add Move</button>
+        <div class="ds-label">.add-btn</div>
+      </div>
+      <div>
+        <button class="logout-btn">Log out</button>
+        <div class="ds-label">.logout-btn</div>
+      </div>
+    </div>
+
+    <div class="ds-row" style="margin-top:1rem;">
+      <div>
+        <div style="display:flex;gap:0.4rem;">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn pin active" title="Pin">📌</button>
+          <button class="icon-btn delete" title="Delete">🗑️</button>
+        </div>
+        <div class="ds-label">.icon-btn &nbsp;·&nbsp; .pin.active &nbsp;·&nbsp; .delete</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAVIGATION -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Navigation Tabs</h2>
+    <div class="ds-card" style="padding:0.5rem 0.75rem;overflow-x:auto;">
+      <div style="display:flex;gap:0.25rem;">
+        <button class="nav-btn active">Moves</button>
+        <button class="nav-btn">Combos</button>
+        <button class="nav-btn">Styling</button>
+        <button class="nav-btn">Footwork</button>
+        <button class="nav-btn">Body Isolations</button>
+        <button class="nav-btn">Focus</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BADGES & PILLS -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Badges &amp; Pills</h2>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Proficiency badges (.skill-badge + .level-N)</p>
+    <div class="ds-row" style="margin-bottom:1.25rem;">
+      <div><span class="skill-badge level-0">Not Started</span><div class="ds-label">level-0</div></div>
+      <div><span class="skill-badge level-1">Learning</span><div class="ds-label">level-1</div></div>
+      <div><span class="skill-badge level-2">Developing</span><div class="ds-label">level-2</div></div>
+      <div><span class="skill-badge level-3">Comfortable</span><div class="ds-label">level-3</div></div>
+      <div><span class="skill-badge level-4">Solid</span><div class="ds-label">level-4</div></div>
+      <div><span class="skill-badge level-5">Mastered</span><div class="ds-label">level-5</div></div>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Progress summary pills (.prog-pill + .level-N)</p>
+    <div class="ds-row" style="margin-bottom:1.25rem;">
+      <span class="prog-pill level-4">12 Solid</span>
+      <span class="prog-pill level-5">3 Mastered</span>
+      <span class="prog-pill level-2">5 Developing</span>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Section badge (.section-badge) &amp; filter pills (.filter-btn)</p>
+    <div class="ds-row">
+      <span class="section-badge">Moves</span>
+      <button class="filter-btn active">All</button>
+      <button class="filter-btn">Beginner</button>
+      <button class="filter-btn">Intermediate</button>
+      <button class="filter-btn">Advanced</button>
+    </div>
+  </section>
+
+  <!-- SKILL CARD -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Skill Card</h2>
+
+    <div style="display:flex;flex-direction:column;gap:0.6rem;max-width:560px;">
+
+      <!-- level-4 card (Solid) -->
+      <div class="skill-card">
+        <div class="skill-card-main">
+          <div class="skill-level-bar bar-4"></div>
+          <div class="skill-info">
+            <div class="skill-name">Body Roll</div>
+            <div class="skill-notes">Lead with ribcage — arms follow naturally</div>
+          </div>
+          <span class="skill-badge level-4">Solid</span>
+          <span class="section-badge">Moves</span>
+          <div class="skill-actions">
+            <button class="icon-btn pin active" title="Focus">📌</button>
+            <button class="icon-btn" title="Edit">✏️</button>
+            <button class="icon-btn delete" title="Delete">🗑️</button>
+          </div>
+        </div>
+        <div class="variations-section">
+          <button class="variations-toggle open">
+            <span class="var-arrow">▶</span> 2 variations
+          </button>
+          <div class="variations-list">
+            <div class="variation-row">
+              <div class="skill-level-bar bar-3" style="min-height:28px;"></div>
+              <div class="var-info">
+                <div class="var-name">Pretzel Walk Exit</div>
+              </div>
+              <span class="skill-badge level-3">Comfortable</span>
+              <div class="var-actions">
+                <button class="icon-btn pin" title="Focus">📌</button>
+                <button class="icon-btn" title="Edit">✏️</button>
+                <button class="icon-btn delete" title="Delete">🗑️</button>
+              </div>
+            </div>
+            <div class="variation-row">
+              <div class="skill-level-bar bar-1" style="min-height:28px;"></div>
+              <div class="var-info">
+                <div class="var-name">Shoulder Wave Combo</div>
+              </div>
+              <span class="skill-badge level-1">Learning</span>
+              <div class="var-actions">
+                <button class="icon-btn pin" title="Focus">📌</button>
+                <button class="icon-btn" title="Edit">✏️</button>
+                <button class="icon-btn delete" title="Delete">🗑️</button>
+              </div>
+            </div>
+            <button class="add-var-btn">+ Add variation</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- level-5 card (Mastered) -->
+      <div class="skill-card">
+        <div class="skill-card-main">
+          <div class="skill-level-bar bar-5"></div>
+          <div class="skill-info">
+            <div class="skill-name">Basic Step</div>
+            <div class="skill-notes"></div>
+          </div>
+          <span class="skill-badge level-5">Mastered</span>
+          <div class="skill-actions">
+            <button class="icon-btn pin" title="Focus">📌</button>
+            <button class="icon-btn" title="Edit">✏️</button>
+            <button class="icon-btn delete" title="Delete">🗑️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- level-0 card (Not Started) -->
+      <div class="skill-card">
+        <div class="skill-card-main">
+          <div class="skill-level-bar bar-0"></div>
+          <div class="skill-info">
+            <div class="skill-name">Advanced Dip Sequence</div>
+            <div class="skill-notes">Watch tutorial before attempting</div>
+          </div>
+          <span class="skill-badge level-0">Not Started</span>
+          <div class="skill-actions">
+            <button class="icon-btn pin" title="Focus">📌</button>
+            <button class="icon-btn" title="Edit">✏️</button>
+            <button class="icon-btn delete" title="Delete">🗑️</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LEVEL PICKER -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Level Picker</h2>
+    <div style="max-width:400px;" class="ds-card">
+      <p style="font-size:0.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">
+        Proficiency <span class="required">*</span>
+      </p>
+      <div class="level-picker">
+        <button class="level-opt" data-level="0">Not Started</button>
+        <button class="level-opt selected" data-level="1">Learning</button>
+        <button class="level-opt" data-level="2">Developing</button>
+        <button class="level-opt" data-level="3">Comfortable</button>
+        <button class="level-opt" data-level="4">Solid</button>
+        <button class="level-opt" data-level="5">Mastered</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORM INPUTS -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Form Inputs</h2>
+
+    <div style="max-width:440px;display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-field">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" placeholder="e.g. Basic Step, Body Roll…" />
+      </div>
+
+      <div class="form-field">
+        <label>Notes <span class="optional">(optional)</span></label>
+        <textarea rows="3" placeholder="Tips, video links, cues to remember…"></textarea>
+      </div>
+
+      <div class="form-field">
+        <label>Category</label>
+        <select>
+          <option>Moves</option>
+          <option>Combos</option>
+          <option>Styling</option>
+          <option>Footwork</option>
+        </select>
+      </div>
+
+      <div class="search-wrap">
+        <input type="search" class="search-input" placeholder="Search all skills…" />
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Modal</h2>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;">
+      <!-- Add skill modal -->
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Add Skill</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>Name <span class="required">*</span></label>
+          <input type="text" placeholder="e.g. Basic Step, Body Roll…" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:0.65rem 0.9rem;font-size:0.9rem;font-family:inherit;width:100%;" />
+          <label>Proficiency</label>
+          <div class="level-picker">
+            <button class="level-opt" data-level="0">Not Started</button>
+            <button class="level-opt selected" data-level="2">Developing</button>
+            <button class="level-opt" data-level="3">Comfortable</button>
+            <button class="level-opt" data-level="4">Solid</button>
+            <button class="level-opt" data-level="5">Mastered</button>
+            <button class="level-opt" data-level="1">Learning</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary">Cancel</button>
+          <button class="btn-primary">Save</button>
+        </div>
+      </div>
+
+      <!-- Delete confirm modal -->
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3>Delete Skill?</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.9rem;line-height:1.5;">Are you sure you want to delete <strong>Body Roll</strong>? This cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary">Cancel</button>
+          <button class="btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTH CARD -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Auth Card</h2>
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span style="font-size:2rem;">&#127926;</span>
+        <span class="auth-title">Bachata Tracker</span>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active">Log In</button>
+        <button class="auth-tab">Sign Up</button>
+      </div>
+      <input type="email" placeholder="Email address" />
+      <input type="password" placeholder="Password" />
+      <p class="auth-error"></p>
+      <button class="btn-primary auth-submit">Log In</button>
+    </div>
+  </section>
+
+  <!-- LOADING & STATUS -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Loading &amp; Status</h2>
+    <div class="ds-row" style="align-items:center;">
+      <div>
+        <div class="loading-spinner"></div>
+        <div class="ds-label">.loading-spinner</div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div class="offline-banner" style="position:static;border-radius:var(--radius-sm);">
+          You're offline — changes saved locally
+        </div>
+        <div class="ds-label">.offline-banner</div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div class="offline-banner syncing" style="position:static;border-radius:var(--radius-sm);">
+          Syncing…
+        </div>
+        <div class="ds-label">.offline-banner.syncing</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRADIENTS -->
+  <section class="ds-section">
+    <h2 class="ds-section-title">Gradients</h2>
+    <div class="ds-swatch-grid">
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:linear-gradient(135deg,#1a0a12 0%,#1a1a24 100%);"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--header-grad</div>
+          <div class="ds-swatch-value">135° #1a0a12 → #1a1a24</div>
+        </div>
+      </div>
+      <div class="ds-swatch">
+        <div class="ds-swatch-color" style="background:linear-gradient(135deg,#e8607e,#c0436a);"></div>
+        <div class="ds-swatch-meta">
+          <div class="ds-swatch-name">--title-grad</div>
+          <div class="ds-swatch-value">135° #e8607e → #c0436a</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
